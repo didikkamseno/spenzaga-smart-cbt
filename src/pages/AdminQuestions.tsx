@@ -108,9 +108,21 @@ const AdminQuestions = () => {
 
   const handleExport = () => {
     const data = questions.map((q, i) => ({
-      No: i + 1, ID: q.question_id, Tipe: typeLabels[q.question_type] || q.question_type,
-      Soal: q.question_text, Jawaban_1: q.answer_1, Jawaban_2: q.answer_2,
-      Jawaban_3: q.answer_3, Jawaban_4: q.answer_4, Poin: q.points,
+      No: i + 1,
+      question_id: q.question_id,
+      question_type: q.question_type,
+      image: q.image,
+      video: q.video,
+      audio: q.audio,
+      question_paragraph: q.question_paragraph,
+      question_text: q.question_text,
+      answer_1: q.answer_1,
+      answer_2: q.answer_2,
+      answer_3: q.answer_3,
+      answer_4: q.answer_4,
+      correct_feedback: q.correct_feedback,
+      incorrect_feedback: q.incorrect_feedback,
+      points: q.points,
     }));
     exportToExcel(data, "Bank_Soal");
   };
