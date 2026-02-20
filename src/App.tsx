@@ -11,6 +11,14 @@ import Result from "./pages/Result";
 import Review from "./pages/Review";
 import Certificate from "./pages/Certificate";
 import NotFound from "./pages/NotFound";
+import AdminLogin from "./pages/AdminLogin";
+import AdminLayout from "./components/AdminLayout";
+import AdminParticipants from "./pages/AdminParticipants";
+import AdminQuestions from "./pages/AdminQuestions";
+import AdminResults from "./pages/AdminResults";
+import AdminAnalysis from "./pages/AdminAnalysis";
+import AdminStatistics from "./pages/AdminStatistics";
+import AdminReset from "./pages/AdminReset";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +36,15 @@ const App = () => (
             <Route path="/result" element={<Result />} />
             <Route path="/review" element={<Review />} />
             <Route path="/certificate" element={<Certificate />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route path="participants" element={<AdminParticipants />} />
+              <Route path="questions" element={<AdminQuestions />} />
+              <Route path="results" element={<AdminResults />} />
+              <Route path="analysis" element={<AdminAnalysis />} />
+              <Route path="statistics" element={<AdminStatistics />} />
+              <Route path="reset" element={<AdminReset />} />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

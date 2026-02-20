@@ -34,6 +34,13 @@ const Exam = () => {
 
     const load = async () => {
       try {
+        // Check if exam is blocked
+        const blockedSnap = await get(ref(db, "config/exam_blocked"));
+        if (blockedSnap.exists() && blockedSnap.val() === true) {
+          setAlreadyTaken(true);
+          setLoading(false);
+          return;
+        }
         // Check if already taken
         const scoreSnap = await get(ref(db, `scores/${student.student_id}`));
         if (scoreSnap.exists()) {
