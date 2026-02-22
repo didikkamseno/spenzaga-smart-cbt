@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ScoreRecord, Student } from "@/types/exam";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ const Result = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { setStudent } = useExam();
+  const [reviewUsed, setReviewUsed] = useState(false);
   const state = location.state as {
     score: ScoreRecord;
     totalPoints: number;
@@ -32,6 +33,15 @@ const Result = () => {
       };
       fire();
     }
+
+    // Auto redirect to login after 1 minute
+    const timeout = setTimeout(() => {
+      setStudent(null);
+      sessionStorage.clear();
+      navigate("/");
+    }, 60000);
+
+    return () => clearTimeout(timeout);
   }, [state]);
 
   if (!state) return null;
@@ -43,6 +53,11 @@ const Result = () => {
     setStudent(null);
     sessionStorage.clear();
     navigate("/");
+  };
+
+  const handleReview = () => {
+    setReviewUsed(true);
+    navigate("/review", { state });
   };
 
   return (
@@ -79,9 +94,11 @@ const Result = () => {
             ))}
           </div>
 
+          <p className="text-xs text-muted-foreground">Halaman ini akan otomatis kembali ke login dalam 1 menit.</p>
+
           <div className="flex flex-col gap-2">
-            <Button onClick={() => navigate("/review", { state })} variant="outline" className="gap-2">
-              <FileText className="w-4 h-4" /> Review Soal
+            <Button onClick={handleReview} variant="outline" className="gap-2" disabled={reviewUsed}>
+              <FileText className="w-4 h-4" /> {reviewUsed ? "Review Sudah Dilihat" : "Review Soal"}
             </Button>
             <Button onClick={() => navigate("/certificate", { state })} className="gap-2">
               <Download className="w-4 h-4" /> Download Sertifikat

@@ -8,7 +8,11 @@ import QuestionCard from "@/components/QuestionCard";
 import NavigationPanel from "@/components/NavigationPanel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Send, AlertTriangle, Clock, Loader2 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ChevronLeft, ChevronRight, Send, AlertTriangle, Clock, Loader2, CheckCircle2, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Exam = () => {
@@ -24,6 +28,7 @@ const Exam = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [alreadyTaken, setAlreadyTaken] = useState(false);
+  const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const hasSubmitted = useRef(false);
 
   useEffect(() => {
@@ -34,21 +39,18 @@ const Exam = () => {
 
     const load = async () => {
       try {
-        // Check if exam is blocked
         const blockedSnap = await get(ref(db, "config/exam_blocked"));
         if (blockedSnap.exists() && blockedSnap.val() === true) {
           setAlreadyTaken(true);
           setLoading(false);
           return;
         }
-        // Check if already taken
         const scoreSnap = await get(ref(db, `scores/${student.student_id}`));
         if (scoreSnap.exists()) {
           setAlreadyTaken(true);
           setLoading(false);
           return;
         }
-        // Load questions
         const qSnap = await get(ref(db, "questions"));
         if (qSnap.exists()) {
           setQuestions(qSnap.val());
@@ -61,13 +63,11 @@ const Exam = () => {
     load();
   }, [student]);
 
-  // Timer
   useEffect(() => {
     const timer = setInterval(() => setElapsed(Math.floor((Date.now() - startTime) / 1000)), 1000);
     return () => clearInterval(timer);
   }, [startTime]);
 
-  // Security: visibility change
   useEffect(() => {
     const handler = () => {
       if (document.hidden) {
@@ -86,7 +86,6 @@ const Exam = () => {
     return () => document.removeEventListener("visibilitychange", handler);
   }, []);
 
-  // Security: keyboard
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (
@@ -101,7 +100,6 @@ const Exam = () => {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  // Security: context menu
   useEffect(() => {
     const handler = (e: Event) => e.preventDefault();
     document.addEventListener("contextmenu", handler);
@@ -135,13 +133,25 @@ const Exam = () => {
     }
   }, [student, questions, answers, elapsed, navigate]);
 
-  // Auto-submit on 5 violations
   useEffect(() => {
     if (violations >= 5 && !hasSubmitted.current) {
       toast({ title: "⛔ Auto Submit", description: "Jawaban otomatis terkirim karena pelanggaran.", variant: "destructive" });
       handleSubmit();
     }
   }, [violations, handleSubmit]);
+
+  // Count answered/unanswered
+  const getAnswerCounts = () => {
+    let answered = 0;
+    let unanswered = 0;
+    questions.forEach((q) => {
+      const a = answers[q.question_id];
+      const isAnswered = a !== undefined && a !== "" && (Array.isArray(a) ? a.length > 0 : true);
+      if (isAnswered) answered++;
+      else unanswered++;
+    });
+    return { answered, unanswered };
+  };
 
   if (loading) {
     return (
@@ -172,6 +182,8 @@ const Exam = () => {
     const a = answers[q.question_id];
     answeredMap[q.question_id] = a !== undefined && a !== "" && (Array.isArray(a) ? a.length > 0 : true);
   });
+
+  const { answered: answeredCount, unanswered: unansweredCount } = getAnswerCounts();
 
   return (
     <div className="min-h-screen bg-background no-select">
@@ -226,7 +238,7 @@ const Exam = () => {
             </Button>
           ) : (
             <Button
-              onClick={handleSubmit}
+              onClick={() => setShowConfirmSubmit(true)}
               disabled={submitting}
               className="gap-1 bg-success hover:bg-success/90 text-success-foreground"
             >
@@ -244,6 +256,46 @@ const Exam = () => {
         questionIds={questions.map((q) => q.question_id)}
         onNavigate={setCurrentIndex}
       />
+
+      {/* Submit confirmation dialog */}
+      <AlertDialog open={showConfirmSubmit} onOpenChange={setShowConfirmSubmit}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <div className="flex justify-center mb-3">
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                <Send className="w-7 h-7 text-primary" />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-center">Kirim Jawaban?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              Apakah Anda yakin akan mengirim jawaban? Setelah dikirim, jawaban tidak dapat diubah.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 my-2">
+            <div className="flex-1 bg-success/10 rounded-lg p-3 text-center">
+              <CheckCircle2 className="w-5 h-5 text-success mx-auto mb-1" />
+              <p className="text-2xl font-bold text-success">{answeredCount}</p>
+              <p className="text-xs text-muted-foreground">Terjawab</p>
+            </div>
+            <div className="flex-1 bg-destructive/10 rounded-lg p-3 text-center">
+              <HelpCircle className="w-5 h-5 text-destructive mx-auto mb-1" />
+              <p className="text-2xl font-bold text-destructive">{unansweredCount}</p>
+              <p className="text-xs text-muted-foreground">Belum Dijawab</p>
+            </div>
+          </div>
+          {unansweredCount > 0 && (
+            <p className="text-xs text-center text-destructive font-medium">
+              ⚠️ Masih ada {unansweredCount} soal yang belum dijawab!
+            </p>
+          )}
+          <AlertDialogFooter className="flex-row gap-2 sm:justify-center">
+            <AlertDialogCancel className="flex-1">Kembali</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSubmit} className="flex-1 bg-success hover:bg-success/90 text-success-foreground">
+              Ya, Kirim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

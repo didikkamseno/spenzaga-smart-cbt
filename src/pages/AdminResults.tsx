@@ -11,7 +11,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Download, Search, Loader2, Trophy } from "lucide-react";
+import { Download, Search, Loader2, Trophy, RefreshCw } from "lucide-react";
 
 const AdminResults = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -21,32 +21,31 @@ const AdminResults = () => {
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("all");
 
-  useEffect(() => {
-    const fetch = async () => {
-      setLoading(true);
-      try {
-        const [studSnap, scoreSnap, qSnap] = await Promise.all([
-          get(ref(db, "students")),
-          get(ref(db, "scores")),
-          get(ref(db, "questions")),
-        ]);
-        if (studSnap.exists()) {
-          const d = studSnap.val();
-          setStudents(Array.isArray(d) ? d : Object.values(d));
-        }
-        if (scoreSnap.exists()) {
-          const d = scoreSnap.val();
-          setScores(Array.isArray(d) ? d : Object.values(d));
-        }
-        if (qSnap.exists()) {
-          const d = qSnap.val();
-          setQuestions(Array.isArray(d) ? d : Object.values(d));
-        }
-      } catch {}
-      setLoading(false);
-    };
-    fetch();
-  }, []);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [studSnap, scoreSnap, qSnap] = await Promise.all([
+        get(ref(db, "students")),
+        get(ref(db, "scores")),
+        get(ref(db, "questions")),
+      ]);
+      if (studSnap.exists()) {
+        const d = studSnap.val();
+        setStudents(Array.isArray(d) ? d : Object.values(d));
+      }
+      if (scoreSnap.exists()) {
+        const d = scoreSnap.val();
+        setScores(Array.isArray(d) ? d : Object.values(d));
+      }
+      if (qSnap.exists()) {
+        const d = qSnap.val();
+        setQuestions(Array.isArray(d) ? d : Object.values(d));
+      }
+    } catch {}
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchData(); }, []);
 
   const maxPoints = questions.reduce((sum, q) => sum + (parseInt(q.points) || 0), 0);
 
@@ -73,7 +72,7 @@ const AdminResults = () => {
   const handleExport = () => {
     const data = filtered.map((m, i) => ({
       No: i + 1, Absen: m.absen, NIS: m.nis, Nama: m.name, Kelas: m.class,
-      Skor: `${m.percentage}%`, Waktu: m.duration, Status: m.status,
+      Skor: m.percentage, Waktu: m.duration, Status: m.status,
     }));
     exportToExcel(data, "Hasil_Ujian");
   };
@@ -92,7 +91,7 @@ const AdminResults = () => {
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center"><Trophy className="w-5 h-5 text-success" /></div>
-            <div><p className="text-xs text-muted-foreground">Rata-rata Skor</p><p className="text-xl font-bold">{merged.length > 0 ? Math.round(merged.reduce((s, m) => s + m.percentage, 0) / merged.length) : 0}%</p></div>
+            <div><p className="text-xs text-muted-foreground">Rata-rata Skor</p><p className="text-xl font-bold">{merged.length > 0 ? Math.round(merged.reduce((s, m) => s + m.percentage, 0) / merged.length) : 0}</p></div>
           </CardContent>
         </Card>
         <Card className="border-0 shadow-sm">
@@ -117,7 +116,10 @@ const AdminResults = () => {
             </SelectContent>
           </Select>
         </div>
-        <Button size="sm" variant="outline" onClick={handleExport} className="gap-1.5"><Download className="w-4 h-4" />Ekspor</Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={fetchData} className="gap-1.5"><RefreshCw className="w-4 h-4" />Refresh</Button>
+          <Button size="sm" variant="outline" onClick={handleExport} className="gap-1.5"><Download className="w-4 h-4" />Ekspor</Button>
+        </div>
       </div>
 
       <Card className="border-0 shadow-sm">
@@ -143,7 +145,7 @@ const AdminResults = () => {
                   <TableCell>{m.nis}</TableCell>
                   <TableCell className="font-medium">{m.name}</TableCell>
                   <TableCell>{m.class}</TableCell>
-                  <TableCell className="text-center font-bold">{m.percentage}%</TableCell>
+                  <TableCell className="text-center">{m.percentage}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{m.duration}</TableCell>
                   <TableCell>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${m.status === "Memenuhi KKTP" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>

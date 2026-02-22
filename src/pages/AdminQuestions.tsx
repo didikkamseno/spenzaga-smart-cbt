@@ -13,9 +13,13 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Download, Upload, Plus, Pencil, Trash2, Search, Loader2 } from "lucide-react";
+import { Download, Upload, Plus, Pencil, Trash2, Search, Loader2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const typeLabels: Record<string, string> = {
@@ -38,6 +42,7 @@ const AdminQuestions = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editQ, setEditQ] = useState<Question | null>(null);
   const [form, setForm] = useState<Question>({ ...emptyForm });
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -73,11 +78,12 @@ const AdminQuestions = () => {
     toast({ title: "Berhasil", description: editQ ? "Soal diperbarui" : "Soal ditambahkan" });
   };
 
-  const deleteQ = async (id: string) => {
-    if (!confirm("Hapus soal ini?")) return;
-    const updated = questions.filter((q) => q.question_id !== id);
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    const updated = questions.filter((q) => q.question_id !== deleteId);
     await set(ref(db, "questions"), updated);
     setQuestions(updated);
+    setDeleteId(null);
     toast({ title: "Dihapus" });
   };
 
@@ -131,6 +137,8 @@ const AdminQuestions = () => {
     (q) => q.question_text.toLowerCase().includes(search.toLowerCase()) || q.question_id.toLowerCase().includes(search.toLowerCase())
   );
 
+  const deleteQuestionText = deleteId ? questions.find(q => q.question_id === deleteId)?.question_text : "";
+
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   return (
@@ -155,7 +163,7 @@ const AdminQuestions = () => {
               <TableRow>
                 <TableHead className="w-12">No</TableHead>
                 <TableHead className="w-16">ID</TableHead>
-                <TableHead className="w-28">Tipe</TableHead>
+                <TableHead className="w-36">Tipe Soal</TableHead>
                 <TableHead>Soal</TableHead>
                 <TableHead className="w-16 text-center">Poin</TableHead>
                 <TableHead className="text-right w-24">Aksi</TableHead>
@@ -167,7 +175,7 @@ const AdminQuestions = () => {
                   <TableCell>{i + 1}</TableCell>
                   <TableCell className="font-mono text-xs">{q.question_id}</TableCell>
                   <TableCell>
-                    <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full whitespace-nowrap">
                       {typeLabels[q.question_type] || q.question_type}
                     </span>
                   </TableCell>
@@ -176,7 +184,7 @@ const AdminQuestions = () => {
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button size="icon" variant="ghost" onClick={() => openEdit(q)}><Pencil className="w-4 h-4" /></Button>
-                      <Button size="icon" variant="ghost" onClick={() => deleteQ(q.question_id)} className="text-destructive hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>
+                      <Button size="icon" variant="ghost" onClick={() => setDeleteId(q.question_id)} className="text-destructive hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -222,6 +230,29 @@ const AdminQuestions = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex justify-center mb-3">
+              <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
+                <AlertTriangle className="w-7 h-7 text-destructive" />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-center">Hapus Soal?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              Soal "<strong>{deleteQuestionText?.substring(0, 50)}{(deleteQuestionText?.length || 0) > 50 ? "..." : ""}</strong>" akan dihapus secara permanen.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-2 sm:justify-center">
+            <AlertDialogCancel className="flex-1">Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="flex-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+              Ya, Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

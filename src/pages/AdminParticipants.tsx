@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { db, ref, get, set } from "@/lib/firebase";
 import { Student } from "@/types/exam";
 import { exportToExcel, importFromExcel } from "@/lib/excelUtils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,7 +12,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Download, Upload, Plus, Pencil, Trash2, Search, CheckCircle2, Clock, Loader2,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Download, Upload, Plus, Pencil, Trash2, Search, CheckCircle2, Clock, Loader2, AlertTriangle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -24,6 +28,7 @@ const AdminParticipants = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [form, setForm] = useState({ student_id: "", absen: "", nis: "", name: "", class: "" });
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -74,11 +79,12 @@ const AdminParticipants = () => {
     toast({ title: "Berhasil", description: editStudent ? "Data diperbarui" : "Siswa ditambahkan" });
   };
 
-  const deleteStudent = async (id: string) => {
-    if (!confirm("Hapus siswa ini?")) return;
-    const updated = students.filter((s) => s.student_id !== id);
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    const updated = students.filter((s) => s.student_id !== deleteId);
     await set(ref(db, "students"), updated);
     setStudents(updated);
+    setDeleteId(null);
     toast({ title: "Dihapus", description: "Siswa berhasil dihapus" });
   };
 
@@ -119,6 +125,8 @@ const AdminParticipants = () => {
       s.nis.includes(search) ||
       s.class.toLowerCase().includes(search.toLowerCase())
   );
+
+  const deleteStudentName = deleteId ? students.find(s => s.student_id === deleteId)?.name : "";
 
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
@@ -175,7 +183,7 @@ const AdminParticipants = () => {
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button size="icon" variant="ghost" onClick={() => openEdit(s)}><Pencil className="w-4 h-4" /></Button>
-                      <Button size="icon" variant="ghost" onClick={() => deleteStudent(s.student_id)} className="text-destructive hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>
+                      <Button size="icon" variant="ghost" onClick={() => setDeleteId(s.student_id)} className="text-destructive hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -203,6 +211,29 @@ const AdminParticipants = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex justify-center mb-3">
+              <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
+                <AlertTriangle className="w-7 h-7 text-destructive" />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-center">Hapus Siswa?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              Data siswa <strong>{deleteStudentName}</strong> akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-2 sm:justify-center">
+            <AlertDialogCancel className="flex-1">Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="flex-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+              Ya, Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

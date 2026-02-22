@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  Users, FileText, Trophy, BarChart3, PieChart, RotateCcw, LogOut, Menu, X, Shield,
+  Users, FileText, Trophy, BarChart3, PieChart, RotateCcw, LogOut, Menu, X, Shield, ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +10,7 @@ const navItems = [
   { path: "/admin/participants", label: "Peserta Ujian", icon: Users },
   { path: "/admin/questions", label: "Bank Soal", icon: FileText },
   { path: "/admin/results", label: "Hasil Ujian", icon: Trophy },
+  { path: "/admin/answer-analysis", label: "Analisis Jawaban", icon: ClipboardList },
   { path: "/admin/analysis", label: "Analisis Soal", icon: PieChart },
   { path: "/admin/statistics", label: "Statistik", icon: BarChart3 },
   { path: "/admin/reset", label: "Reset & Akses", icon: RotateCcw },
@@ -31,7 +32,7 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex font-sans">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-30 bg-foreground/20 lg:hidden" onClick={() => setSidebarOpen(false)} />
