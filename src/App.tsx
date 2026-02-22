@@ -19,6 +19,7 @@ import AdminResults from "./pages/AdminResults";
 import AdminAnalysis from "./pages/AdminAnalysis";
 import AdminStatistics from "./pages/AdminStatistics";
 import AdminReset from "./pages/AdminReset";
+import AdminAnswerAnalysis from "./pages/AdminAnswerAnalysis";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="questions" element={<AdminQuestions />} />
               <Route path="results" element={<AdminResults />} />
               <Route path="analysis" element={<AdminAnalysis />} />
+              <Route path="answer-analysis" element={<AdminAnswerAnalysis />} />
               <Route path="statistics" element={<AdminStatistics />} />
               <Route path="reset" element={<AdminReset />} />
             </Route>

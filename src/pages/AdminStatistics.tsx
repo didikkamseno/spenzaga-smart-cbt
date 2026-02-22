@@ -112,9 +112,9 @@ const AdminStatistics = () => {
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: "Rata-rata", value: `${avg}%`, icon: TrendingUp, color: "text-primary" },
-          { label: "Tertinggi", value: `${highest}%`, icon: Award, color: "text-success" },
-          { label: "Terendah", value: `${lowest}%`, icon: Target, color: "text-destructive" },
+          { label: "Rata-rata", value: `${avg}`, icon: TrendingUp, color: "text-primary" },
+          { label: "Tertinggi", value: `${highest}`, icon: Award, color: "text-success" },
+          { label: "Terendah", value: `${lowest}`, icon: Target, color: "text-destructive" },
           { label: "Peserta", value: `${scores.length}/${students.length}`, icon: Users, color: "text-accent" },
         ].map((item) => (
           <Card key={item.label} className="border-0 shadow-sm">
@@ -192,7 +192,7 @@ const AdminStatistics = () => {
                   <TableCell className="font-medium">{c.class}</TableCell>
                   <TableCell className="text-center">{c.total}</TableCell>
                   <TableCell className="text-center">{c.done}</TableCell>
-                  <TableCell className="text-center font-bold">{c.avg}%</TableCell>
+                  <TableCell className="text-center font-bold">{c.avg}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
