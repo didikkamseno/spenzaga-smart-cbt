@@ -15,18 +15,17 @@ const Review = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
 
   useEffect(() => {
-    if (!state) {
-      navigate("/");
-      return;
-    }
-    get(ref(db, "questions")).then((snap) => {
-      if (snap.exists()) setQuestions(snap.val());
-    });
+    if (!state) { navigate("/"); return; }
+    get(ref(db, "questions")).then((snap) => { if (snap.exists()) setQuestions(snap.val()); });
   }, [state]);
 
   if (!state || !questions.length) return null;
-
   const { score } = state;
+
+  const typeLabels: Record<string, string> = {
+    TF: "Benar / Salah", MC: "Pilihan Ganda", MR: "Jawaban Ganda",
+    TI: "Jawaban Singkat", MG: "Menjodohkan", SEQ: "Urutan", NUMG: "Numerik",
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,19 +49,15 @@ const Review = () => {
           const formatResponse = (r: string | string[]) => (Array.isArray(r) ? r.join(", ") : r);
 
           let correctDisplay = "";
-          if (["TF", "MC", "TI", "NUMG"].includes(q.question_type)) {
-            correctDisplay = correctAnswers.join(" / ");
-          } else if (q.question_type === "MR") {
-            correctDisplay = correctAnswers.join(", ");
-          } else if (q.question_type === "MG") {
-            correctDisplay = opts.join(", ");
-          } else if (q.question_type === "SEQ") {
-            correctDisplay = opts.join(" → ");
-          }
+          if (["TF", "MC", "TI", "NUMG"].includes(q.question_type)) correctDisplay = correctAnswers.join(" / ");
+          else if (q.question_type === "MR") correctDisplay = correctAnswers.join(", ");
+          else if (q.question_type === "MG") correctDisplay = opts.join(", ");
+          else if (q.question_type === "SEQ") correctDisplay = opts.join(" → ");
 
           return (
             <Card key={q.question_id} className={`border-l-4 ${isCorrect ? "border-l-success" : "border-l-destructive"}`}>
               <CardContent className="p-5">
+                {/* Header: number, type, status */}
                 <div className="flex items-start gap-3 mb-3">
                   {isCorrect ? (
                     <CheckCircle2 className="w-5 h-5 text-success shrink-0 mt-0.5" />
@@ -70,28 +65,88 @@ const Review = () => {
                     <XCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
                   )}
                   <div className="flex-1">
-                    <span className="text-xs font-medium text-muted-foreground">Soal {i + 1}</span>
-                    <p className="font-medium text-foreground">{q.question_text}</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-medium text-muted-foreground">Soal {i + 1}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                        {typeLabels[q.question_type] || q.question_type}
+                      </span>
+                    </div>
+
+                    {/* Media */}
+                    {q.image && <img src={q.image} alt="Soal" className="max-w-full max-h-48 rounded-lg mb-2" />}
+                    {q.video && (
+                      <video controls className="max-w-full max-h-48 rounded-lg mb-2">
+                        <source src={q.video} type="video/mp4" />
+                      </video>
+                    )}
+                    {q.audio && (
+                      <audio controls className="w-full mb-2">
+                        <source src={q.audio} type="audio/mpeg" />
+                      </audio>
+                    )}
+
+                    {/* Paragraph */}
+                    {q.question_paragraph && (
+                      <div className="bg-secondary/50 rounded-lg p-3 mb-2 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: q.question_paragraph }} />
+                    )}
+
+                    {/* Question text */}
+                    <p className="font-medium text-foreground mb-3">{q.question_text}</p>
+
+                    {/* Options display */}
+                    {["TF", "MC", "MR"].includes(q.question_type) && (
+                      <div className="space-y-1.5 mb-3">
+                        {(q.question_type === "TF" ? ["True", "False"] : opts.map(clean)).map((opt, oi) => {
+                          const isSelected = Array.isArray(response) ? response.includes(opt) : response === opt;
+                          const isCorrectOpt = correctAnswers.includes(opt);
+                          return (
+                            <div
+                              key={oi}
+                              className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm ${
+                                isSelected && isCorrectOpt
+                                  ? "border-success bg-success/10 text-success"
+                                  : isSelected && !isCorrectOpt
+                                  ? "border-destructive bg-destructive/10 text-destructive"
+                                  : isCorrectOpt && !isCorrect
+                                  ? "border-success/50 bg-success/5 text-success"
+                                  : "border-border text-muted-foreground"
+                              }`}
+                            >
+                              {isSelected ? (isCorrectOpt ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />) : (
+                                <span className="w-4 h-4 rounded-full border border-current shrink-0" />
+                              )}
+                              <span>{opt}</span>
+                              {isSelected && <span className="ml-auto text-xs opacity-70">(Jawaban Anda)</span>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="ml-8 space-y-1.5 text-sm">
-                  <div className="flex gap-2">
-                    <span className="text-muted-foreground min-w-[100px]">Jawaban Anda:</span>
-                    <span className={isCorrect ? "text-success font-medium" : "text-destructive font-medium"}>
-                      {formatResponse(response)}
-                    </span>
-                  </div>
-                  {!isCorrect && (
+                {/* For non-choice types, show answer info */}
+                {!["TF", "MC", "MR"].includes(q.question_type) && (
+                  <div className="ml-8 space-y-1.5 text-sm">
                     <div className="flex gap-2">
-                      <span className="text-muted-foreground min-w-[100px]">Jawaban Benar:</span>
-                      <span className="text-success font-medium">{correctDisplay}</span>
+                      <span className="text-muted-foreground min-w-[100px]">Jawaban Anda:</span>
+                      <span className={isCorrect ? "text-success font-medium" : "text-destructive font-medium"}>
+                        {formatResponse(response)}
+                      </span>
                     </div>
-                  )}
-                  <p className="text-xs text-muted-foreground italic mt-2">
-                    {isCorrect ? q.correct_feedback : q.incorrect_feedback}
-                  </p>
-                </div>
+                    {!isCorrect && (
+                      <div className="flex gap-2">
+                        <span className="text-muted-foreground min-w-[100px]">Jawaban Benar:</span>
+                        <span className="text-success font-medium">{correctDisplay}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Feedback */}
+                <p className="ml-8 text-xs text-muted-foreground italic mt-2">
+                  {isCorrect ? q.correct_feedback : q.incorrect_feedback}
+                </p>
               </CardContent>
             </Card>
           );

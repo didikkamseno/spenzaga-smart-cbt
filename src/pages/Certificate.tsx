@@ -27,7 +27,13 @@ const Certificate = () => {
 
   const handleDownload = async () => {
     if (!certRef.current) return;
-    const canvas = await html2canvas(certRef.current, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+    const canvas = await html2canvas(certRef.current, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      width: certRef.current.scrollWidth,
+      height: certRef.current.scrollHeight,
+    });
     const link = document.createElement("a");
     link.download = `Sertifikat_CBT_${student.name.replace(/\s+/g, "_")}.png`;
     link.href = canvas.toDataURL();
@@ -61,28 +67,14 @@ const Certificate = () => {
             }}
           >
             {/* Border */}
-            <div
-              style={{
-                position: "absolute",
-                inset: "12px",
-                border: "3px solid #1a4480",
-                borderRadius: "12px",
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                inset: "18px",
-                border: "1px solid #d4a017",
-                borderRadius: "8px",
-              }}
-            />
+            <div style={{ position: "absolute", inset: "12px", border: "3px solid #1a4480", borderRadius: "12px" }} />
+            <div style={{ position: "absolute", inset: "18px", border: "1px solid #d4a017", borderRadius: "8px" }} />
 
             <div style={{ position: "relative", zIndex: 1, textAlign: "center", padding: "20px 40px" }}>
               <img
                 src="https://spenzaga.github.io/assets/img/logo.png"
                 alt="Logo"
-                style={{ width: "60px", height: "60px", margin: "0 auto 12px" }}
+                style={{ width: "60px", height: "60px", margin: "0 auto 12px", display: "block" }}
                 crossOrigin="anonymous"
               />
               <h2 style={{ fontSize: "14px", color: "#1a4480", margin: 0, letterSpacing: "2px", textTransform: "uppercase" }}>
@@ -115,9 +107,9 @@ const Certificate = () => {
                   margin: "0 0 20px",
                 }}
               >
-                <div style={{ fontSize: "32px", fontWeight: 800 }}>{pct}%</div>
+                <div style={{ fontSize: "32px", fontWeight: 800 }}>{totalPoints}/{maxPoints}</div>
                 <div style={{ fontSize: "11px", opacity: 0.8 }}>
-                  Skor: {totalPoints}/{maxPoints}
+                  Skor
                 </div>
               </div>
 
