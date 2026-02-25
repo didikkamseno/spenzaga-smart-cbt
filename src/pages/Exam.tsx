@@ -12,7 +12,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ChevronLeft, ChevronRight, Send, AlertTriangle, Clock, Loader2, CheckCircle2, HelpCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Send, AlertTriangle, Clock, Loader2, CheckCircle2, HelpCircle, Flag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Exam = () => {
@@ -22,6 +22,7 @@ const Exam = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+  const [flagged, setFlagged] = useState<Record<string, boolean>>({});
   const [violations, setViolations] = useState(0);
   const [startTime] = useState(Date.now());
   const [elapsed, setElapsed] = useState(0);
@@ -140,7 +141,11 @@ const Exam = () => {
     }
   }, [violations, handleSubmit]);
 
-  // Count answered/unanswered
+  const toggleFlag = () => {
+    const qid = questions[currentIndex]?.question_id;
+    if (qid) setFlagged((prev) => ({ ...prev, [qid]: !prev[qid] }));
+  };
+
   const getAnswerCounts = () => {
     let answered = 0;
     let unanswered = 0;
@@ -184,6 +189,12 @@ const Exam = () => {
   });
 
   const { answered: answeredCount, unanswered: unansweredCount } = getAnswerCounts();
+  const isFlagged = flagged[currentQ.question_id] || false;
+
+  const typeLabels: Record<string, string> = {
+    TF: "Benar / Salah", MC: "Pilihan Ganda", MR: "Jawaban Ganda",
+    TI: "Jawaban Singkat", MG: "Menjodohkan", SEQ: "Urutan", NUMG: "Numerik",
+  };
 
   return (
     <div className="min-h-screen bg-background no-select">
@@ -212,11 +223,28 @@ const Exam = () => {
       <div className="max-w-3xl mx-auto px-4 py-6">
         <Card className="shadow-lg border-0">
           <CardContent className="p-6">
+            {/* Question number + type inline + flag button */}
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-sm font-bold text-primary">Soal {currentIndex + 1}</span>
+              <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+                {typeLabels[currentQ.question_type] || currentQ.question_type}
+              </span>
+              <span className="ml-auto text-xs text-muted-foreground">{currentQ.points} poin</span>
+              <button
+                onClick={toggleFlag}
+                className={`ml-2 p-1.5 rounded-lg transition-colors ${isFlagged ? "bg-amber-100 text-amber-600" : "text-muted-foreground hover:text-amber-500 hover:bg-amber-50"}`}
+                title="Tandai soal untuk direview"
+              >
+                <Flag className="w-4 h-4" fill={isFlagged ? "currentColor" : "none"} />
+              </button>
+            </div>
+
             <QuestionCard
               question={currentQ}
               index={currentIndex}
               answer={answers[currentQ.question_id]}
               onChange={(val) => setAnswers((prev) => ({ ...prev, [currentQ.question_id]: val }))}
+              hideHeader
             />
           </CardContent>
         </Card>
@@ -253,6 +281,7 @@ const Exam = () => {
         total={questions.length}
         current={currentIndex}
         answered={answeredMap}
+        flagged={flagged}
         questionIds={questions.map((q) => q.question_id)}
         onNavigate={setCurrentIndex}
       />

@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Question } from "@/types/exam";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,6 +12,7 @@ interface Props {
   index: number;
   answer: string | string[] | undefined;
   onChange: (val: string | string[]) => void;
+  hideHeader?: boolean;
 }
 
 const clean = (s: string) => s.replace(/^\*/, "");
@@ -26,34 +26,24 @@ const shuffle = <T,>(arr: T[]): T[] => {
   return a;
 };
 
-const QuestionCard = ({ question, index, answer, onChange }: Props) => {
+const QuestionCard = ({ question, index, answer, onChange, hideHeader }: Props) => {
   const options = useMemo(
     () => [question.answer_1, question.answer_2, question.answer_3, question.answer_4].filter(Boolean),
     [question]
   );
 
-  // For MG: parse pairs
   const mgPairs = useMemo(() => {
     if (question.question_type !== "MG") return [];
-    return options.map((o) => {
-      const [left, right] = o.split("|");
-      return { left, right };
-    });
+    return options.map((o) => { const [left, right] = o.split("|"); return { left, right }; });
   }, [question.question_type, options]);
 
   const mgRightOptions = useMemo(() => shuffle(mgPairs.map((p) => p.right)), [mgPairs]);
 
-  // For SEQ: shuffled items
   const [seqItems, setSeqItems] = useState<string[]>([]);
   useEffect(() => {
     if (question.question_type === "SEQ") {
-      if (answer && Array.isArray(answer) && answer.length > 0) {
-        setSeqItems(answer);
-      } else {
-        const shuffled = shuffle(options);
-        setSeqItems(shuffled);
-        onChange(shuffled);
-      }
+      if (answer && Array.isArray(answer) && answer.length > 0) setSeqItems(answer);
+      else { const shuffled = shuffle(options); setSeqItems(shuffled); onChange(shuffled); }
     }
   }, [question.question_id]);
 
@@ -64,14 +54,10 @@ const QuestionCard = ({ question, index, answer, onChange }: Props) => {
     onChange(newItems);
   };
 
-  // MG state
   const [mgMatches, setMgMatches] = useState<Record<string, string>>(() => {
     if (question.question_type === "MG" && Array.isArray(answer)) {
       const m: Record<string, string> = {};
-      (answer as string[]).forEach((pair) => {
-        const [l, r] = pair.split("|");
-        m[l] = r;
-      });
+      (answer as string[]).forEach((pair) => { const [l, r] = pair.split("|"); m[l] = r; });
       return m;
     }
     return {};
@@ -85,31 +71,16 @@ const QuestionCard = ({ question, index, answer, onChange }: Props) => {
 
   const renderMedia = () => (
     <div className="space-y-3 mb-4">
-      {question.image && (
-        <img src={question.image} alt="Soal" className="max-w-full max-h-60 rounded-lg mx-auto" />
-      )}
-      {question.video && (
-        <video controls className="max-w-full max-h-60 rounded-lg mx-auto">
-          <source src={question.video} type="video/mp4" />
-        </video>
-      )}
-      {question.audio && (
-        <audio controls className="w-full">
-          <source src={question.audio} type="audio/mpeg" />
-        </audio>
-      )}
+      {question.image && <img src={question.image} alt="Soal" className="max-w-full max-h-60 rounded-lg mx-auto" />}
+      {question.video && <video controls className="max-w-full max-h-60 rounded-lg mx-auto"><source src={question.video} type="video/mp4" /></video>}
+      {question.audio && <audio controls className="w-full"><source src={question.audio} type="audio/mpeg" /></audio>}
     </div>
   );
 
   const typeBadge = () => {
     const labels: Record<string, string> = {
-      TF: "Benar / Salah",
-      MC: "Pilihan Ganda",
-      MR: "Jawaban Ganda",
-      TI: "Jawaban Singkat",
-      MG: "Menjodohkan",
-      SEQ: "Urutan",
-      NUMG: "Numerik",
+      TF: "Benar / Salah", MC: "Pilihan Ganda", MR: "Jawaban Ganda",
+      TI: "Jawaban Singkat", MG: "Menjodohkan", SEQ: "Urutan", NUMG: "Numerik",
     };
     return (
       <span className="inline-block text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary mb-3">
@@ -124,39 +95,25 @@ const QuestionCard = ({ question, index, answer, onChange }: Props) => {
         return (
           <RadioGroup value={(answer as string) || ""} onValueChange={onChange} className="space-y-2">
             {["True", "False"].map((v) => (
-              <label
-                key={v}
-                className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
-                  answer === v ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                }`}
-              >
-                <RadioGroupItem value={v} id={`tf-${v}`} />
-                <span className="font-medium">{v}</span>
+              <label key={v} className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${answer === v ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}>
+                <RadioGroupItem value={v} id={`tf-${v}`} /><span className="font-medium">{v}</span>
               </label>
             ))}
           </RadioGroup>
         );
-
       case "MC":
         return (
           <RadioGroup value={(answer as string) || ""} onValueChange={onChange} className="space-y-2">
             {options.map((opt, i) => {
               const label = clean(opt);
               return (
-                <label
-                  key={i}
-                  className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
-                    answer === label ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                  }`}
-                >
-                  <RadioGroupItem value={label} id={`mc-${i}`} />
-                  <span>{label}</span>
+                <label key={i} className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${answer === label ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}>
+                  <RadioGroupItem value={label} id={`mc-${i}`} /><span>{label}</span>
                 </label>
               );
             })}
           </RadioGroup>
         );
-
       case "MR": {
         const selected = (answer as string[]) || [];
         return (
@@ -165,19 +122,8 @@ const QuestionCard = ({ question, index, answer, onChange }: Props) => {
               const label = clean(opt);
               const checked = selected.includes(label);
               return (
-                <label
-                  key={i}
-                  className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
-                    checked ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                  }`}
-                >
-                  <Checkbox
-                    checked={checked}
-                    onCheckedChange={(c) => {
-                      const next = c ? [...selected, label] : selected.filter((s) => s !== label);
-                      onChange(next);
-                    }}
-                  />
+                <label key={i} className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${checked ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}>
+                  <Checkbox checked={checked} onCheckedChange={(c) => { const next = c ? [...selected, label] : selected.filter((s) => s !== label); onChange(next); }} />
                   <span>{label}</span>
                 </label>
               );
@@ -185,17 +131,8 @@ const QuestionCard = ({ question, index, answer, onChange }: Props) => {
           </div>
         );
       }
-
       case "TI":
-        return (
-          <Input
-            placeholder="Ketik jawaban Anda..."
-            value={(answer as string) || ""}
-            onChange={(e) => onChange(e.target.value)}
-            className="h-12 text-base"
-          />
-        );
-
+        return <Input placeholder="Ketik jawaban Anda..." value={(answer as string) || ""} onChange={(e) => onChange(e.target.value)} className="h-12 text-base" />;
       case "MG":
         return (
           <div className="space-y-3">
@@ -204,67 +141,30 @@ const QuestionCard = ({ question, index, answer, onChange }: Props) => {
                 <span className="font-medium min-w-[120px]">{pair.left}</span>
                 <span className="text-muted-foreground">→</span>
                 <Select value={mgMatches[pair.left] || ""} onValueChange={(v) => handleMgChange(pair.left, v)}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Pilih jawaban" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mgRightOptions.map((r) => (
-                      <SelectItem key={r} value={r}>
-                        {r}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                  <SelectTrigger className="flex-1"><SelectValue placeholder="Pilih jawaban" /></SelectTrigger>
+                  <SelectContent>{mgRightOptions.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             ))}
           </div>
         );
-
       case "SEQ":
         return (
           <div className="space-y-2">
             {seqItems.map((item, i) => (
               <div key={item} className="flex items-center gap-2 p-3 rounded-xl border-2 border-border bg-secondary/30">
-                <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
-                  {i + 1}
-                </span>
+                <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">{i + 1}</span>
                 <span className="flex-1 font-medium">{item}</span>
                 <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    disabled={i === 0}
-                    onClick={() => moveSeq(i, i - 1)}
-                  >
-                    <ArrowUp className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    disabled={i === seqItems.length - 1}
-                    onClick={() => moveSeq(i, i + 1)}
-                  >
-                    <ArrowDown className="w-4 h-4" />
-                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={i === 0} onClick={() => moveSeq(i, i - 1)}><ArrowUp className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={i === seqItems.length - 1} onClick={() => moveSeq(i, i + 1)}><ArrowDown className="w-4 h-4" /></Button>
                 </div>
               </div>
             ))}
           </div>
         );
-
       case "NUMG":
-        return (
-          <Input
-            type="number"
-            placeholder="Ketik angka jawaban..."
-            value={(answer as string) || ""}
-            onChange={(e) => onChange(e.target.value)}
-            className="h-12 text-base"
-          />
-        );
-
+        return <Input type="number" placeholder="Ketik angka jawaban..." value={(answer as string) || ""} onChange={(e) => onChange(e.target.value)} className="h-12 text-base" />;
       default:
         return null;
     }
@@ -272,19 +172,18 @@ const QuestionCard = ({ question, index, answer, onChange }: Props) => {
 
   return (
     <div className="animate-fade-in">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-sm font-bold text-primary">Soal {index + 1}</span>
-        {typeBadge()}
-        <span className="ml-auto text-xs text-muted-foreground">{question.points} poin</span>
-      </div>
+      {!hideHeader && (
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-sm font-bold text-primary">Soal {index + 1}</span>
+          {typeBadge()}
+          <span className="ml-auto text-xs text-muted-foreground">{question.points} poin</span>
+        </div>
+      )}
 
       {renderMedia()}
 
       {question.question_paragraph && (
-        <div
-          className="bg-secondary/50 rounded-xl p-4 mb-4 text-sm leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: question.question_paragraph }}
-        />
+        <div className="bg-secondary/50 rounded-xl p-4 mb-4 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: question.question_paragraph }} />
       )}
 
       <p className="font-semibold text-foreground mb-4 text-base leading-relaxed">{question.question_text}</p>
