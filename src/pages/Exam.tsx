@@ -317,9 +317,9 @@ const Exam = () => {
               ⚠️ Masih ada {unansweredCount} soal yang belum dijawab!
             </p>
           )}
-          <AlertDialogFooter className="flex-row gap-2 sm:justify-center">
-            <AlertDialogCancel className="flex-1">Kembali</AlertDialogCancel>
-            <AlertDialogAction onClick={handleSubmit} className="flex-1 bg-success hover:bg-success/90 text-success-foreground">
+          <AlertDialogFooter className="flex-row justify-center gap-3 mt-2">
+            <AlertDialogCancel className="flex-1 m-0">Kembali</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSubmit} className="flex-1 m-0 bg-success hover:bg-success/90 text-success-foreground">
               Ya, Kirim
             </AlertDialogAction>
           </AlertDialogFooter>
