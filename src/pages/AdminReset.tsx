@@ -12,13 +12,14 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { RotateCcw, Lock, Unlock, Loader2, CheckCircle2, Clock, AlertTriangle, Search } from "lucide-react";
+import { RotateCcw, Lock, Unlock, Loader2, CheckCircle2, Clock, AlertTriangle, Search, Eye, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const AdminReset = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [scores, setScores] = useState<any[]>([]);
   const [examBlocked, setExamBlocked] = useState(false);
+  const [reviewDuration, setReviewDuration] = useState(60);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [confirmResetAll, setConfirmResetAll] = useState(false);
@@ -28,14 +29,16 @@ const AdminReset = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [studSnap, scoreSnap, configSnap] = await Promise.all([
+      const [studSnap, scoreSnap, configSnap, reviewSnap] = await Promise.all([
         get(ref(db, "students")),
         get(ref(db, "scores")),
         get(ref(db, "config/exam_blocked")),
+        get(ref(db, "config/review_duration")),
       ]);
       if (studSnap.exists()) { const d = studSnap.val(); setStudents(Array.isArray(d) ? d : Object.values(d)); }
       if (scoreSnap.exists()) { const d = scoreSnap.val(); setScores(Array.isArray(d) ? d : Object.values(d)); }
       if (configSnap.exists()) setExamBlocked(configSnap.val());
+      if (reviewSnap.exists()) setReviewDuration(reviewSnap.val());
     } catch {}
     setLoading(false);
   };
@@ -99,6 +102,47 @@ const AdminReset = () => {
                 {examBlocked ? "Diblokir" : "Terbuka"}
               </span>
               <Switch checked={!examBlocked} onCheckedChange={(checked) => toggleBlock(!checked)} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Review Duration Setting */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Eye className="w-4 h-4 text-primary" />
+            Durasi Review Soal
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
+            <div>
+              <p className="font-medium text-sm">Waktu Review</p>
+              <p className="text-xs text-muted-foreground">
+                Durasi siswa dapat melihat halaman review soal setelah ujian (dalam detik)
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min={10}
+                max={600}
+                value={reviewDuration}
+                onChange={(e) => setReviewDuration(Number(e.target.value))}
+                className="w-20 h-9 text-center"
+              />
+              <span className="text-sm text-muted-foreground">detik</span>
+              <Button
+                size="sm"
+                className="gap-1.5"
+                onClick={async () => {
+                  await set(ref(db, "config/review_duration"), reviewDuration);
+                  toast({ title: "Berhasil", description: `Durasi review diatur ke ${reviewDuration} detik` });
+                }}
+              >
+                <Save className="w-3.5 h-3.5" /> Simpan
+              </Button>
             </div>
           </div>
         </CardContent>

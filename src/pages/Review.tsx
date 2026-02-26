@@ -4,7 +4,7 @@ import { db, ref, get } from "@/lib/firebase";
 import { Question, ScoreRecord, Student } from "@/types/exam";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, Clock } from "lucide-react";
 
 const clean = (s: string) => s.replace(/^\*/, "");
 
@@ -13,11 +13,35 @@ const Review = () => {
   const navigate = useNavigate();
   const state = location.state as { score: ScoreRecord; student: Student } | null;
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   useEffect(() => {
     if (!state) { navigate("/"); return; }
-    get(ref(db, "questions")).then((snap) => { if (snap.exists()) setQuestions(snap.val()); });
+    Promise.all([
+      get(ref(db, "questions")),
+      get(ref(db, "config/review_duration")),
+    ]).then(([qSnap, durSnap]) => {
+      if (qSnap.exists()) setQuestions(qSnap.val());
+      const dur = durSnap.exists() ? durSnap.val() : 60;
+      setTimeLeft(dur);
+    });
   }, [state]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (timeLeft === null || timeLeft <= 0) return;
+    const interval = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t === null || t <= 1) {
+          clearInterval(interval);
+          navigate(-1);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timeLeft !== null]);
 
   if (!state || !questions.length) return null;
   const { score } = state;
@@ -35,6 +59,12 @@ const Review = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <h1 className="text-sm font-bold">Review Soal</h1>
+          {timeLeft !== null && (
+            <div className="ml-auto flex items-center gap-1.5 bg-primary-foreground/10 px-3 py-1 rounded-full">
+              <Clock className="w-3.5 h-3.5" />
+              <span className="text-xs font-mono font-bold">{timeLeft}s</span>
+            </div>
+          )}
         </div>
       </div>
 

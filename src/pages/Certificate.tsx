@@ -22,7 +22,7 @@ const Certificate = () => {
   }
 
   const { score, totalPoints, maxPoints, student } = state;
-  const pct = Math.round((totalPoints / maxPoints) * 100);
+  const scoreValue = score.total_score !== undefined ? score.total_score : totalPoints;
   const today = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 
   const handleDownload = async () => {
@@ -101,15 +101,16 @@ const Certificate = () => {
                 style={{
                   display: "inline-block",
                   background: "#1a4480",
-                  color: "#fff",
-                  padding: "12px 32px",
+                  color: "#ffffff",
+                  padding: "16px 40px",
                   borderRadius: "8px",
                   margin: "0 0 20px",
+                  WebkitTextFillColor: "#ffffff",
                 }}
               >
-                <div style={{ fontSize: "32px", fontWeight: 800 }}>{totalPoints}/{maxPoints}</div>
-                <div style={{ fontSize: "11px", opacity: 0.8 }}>
-                  Skor
+                <div style={{ fontSize: "36px", fontWeight: 800, color: "#ffffff", WebkitTextFillColor: "#ffffff" }}>{scoreValue}</div>
+                <div style={{ fontSize: "12px", color: "#cbd5e1", WebkitTextFillColor: "#cbd5e1" }}>
+                  Nilai Ujian
                 </div>
               </div>
 
