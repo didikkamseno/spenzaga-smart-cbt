@@ -27,16 +27,36 @@ const Certificate = () => {
 
   const handleDownload = async () => {
     if (!certRef.current) return;
-    const canvas = await html2canvas(certRef.current, {
-      scale: 2,
+    // Clone the element to ensure proper rendering on mobile
+    const clone = certRef.current.cloneNode(true) as HTMLElement;
+    clone.style.position = "fixed";
+    clone.style.top = "-9999px";
+    clone.style.left = "-9999px";
+    clone.style.width = "800px";
+    clone.style.height = "auto";
+    document.body.appendChild(clone);
+
+    // Wait for fonts/images to settle
+    await new Promise((r) => setTimeout(r, 500));
+
+    const canvas = await html2canvas(clone, {
+      scale: 3,
       useCORS: true,
+      allowTaint: true,
       backgroundColor: "#ffffff",
-      width: certRef.current.scrollWidth,
-      height: certRef.current.scrollHeight,
+      width: 800,
+      height: clone.scrollHeight,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: 800,
+      windowHeight: clone.scrollHeight,
+      logging: false,
     });
+    document.body.removeChild(clone);
+
     const link = document.createElement("a");
     link.download = `Sertifikat_CBT_${student.name.replace(/\s+/g, "_")}.png`;
-    link.href = canvas.toDataURL();
+    link.href = canvas.toDataURL("image/png");
     link.click();
   };
 
@@ -97,22 +117,47 @@ const Certificate = () => {
                 NIS: {student.nis} &nbsp;|&nbsp; Kelas: {student.class}
               </p>
 
-              <div
-                style={{
-                  display: "inline-block",
-                  background: "#1a4480",
-                  color: "#ffffff",
-                  padding: "16px 40px",
-                  borderRadius: "8px",
-                  margin: "0 0 20px",
-                  WebkitTextFillColor: "#ffffff",
-                }}
-              >
-                <div style={{ fontSize: "36px", fontWeight: 800, color: "#ffffff", WebkitTextFillColor: "#ffffff" }}>{scoreValue}</div>
-                <div style={{ fontSize: "12px", color: "#cbd5e1", WebkitTextFillColor: "#cbd5e1" }}>
-                  Nilai Ujian
-                </div>
-              </div>
+              <table
+                  style={{
+                    width: "200px",
+                    margin: "0 auto",
+                    borderCollapse: "collapse",
+                    backgroundColor: "#1a4480",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <tbody>
+                    <tr>
+                      <td
+                        style={{
+                          textAlign: "center",
+                          padding: "16px 40px 4px",
+                          fontSize: "36px",
+                          fontWeight: 800,
+                          color: "#ffffff",
+                          WebkitTextFillColor: "#ffffff",
+                        }}
+                      >
+                        {scoreValue}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style={{
+                          textAlign: "center",
+                          padding: "0 40px 16px",
+                          fontSize: "12px",
+                          color: "#cbd5e1",
+                          WebkitTextFillColor: "#cbd5e1",
+                        }}
+                      >
+                        Nilai Ujian
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div style={{ height: "20px" }} />
 
               <p style={{ fontSize: "12px", color: "#475569", margin: "0 0 4px" }}>
                 Status: <strong>{score.status}</strong>
