@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { db, ref, get } from "@/lib/firebase";
 import { Question, ScoreRecord, Student } from "@/types/exam";
+import { useExam } from "@/context/ExamContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle2, XCircle, Clock } from "lucide-react";
@@ -11,6 +12,7 @@ const clean = (s: string) => s.replace(/^\*/, "");
 const Review = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { setStudent } = useExam();
   const state = location.state as { score: ScoreRecord; student: Student } | null;
   const [questions, setQuestions] = useState<Question[]>([]);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -34,7 +36,9 @@ const Review = () => {
       setTimeLeft((t) => {
         if (t === null || t <= 1) {
           clearInterval(interval);
-          navigate(-1);
+          setStudent(null);
+          sessionStorage.clear();
+          navigate("/");
           return 0;
         }
         return t - 1;
@@ -55,7 +59,7 @@ const Review = () => {
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-40 bg-primary text-primary-foreground shadow-lg">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-primary-foreground hover:bg-primary-foreground/10">
+          <Button variant="ghost" size="icon" onClick={() => { setStudent(null); sessionStorage.clear(); navigate("/"); }} className="text-primary-foreground hover:bg-primary-foreground/10">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <h1 className="text-sm font-bold">Review Soal</h1>
@@ -183,8 +187,8 @@ const Review = () => {
         })}
 
         <div className="text-center pt-4 pb-8">
-          <Button onClick={() => navigate(-1)} variant="outline" className="gap-2">
-            <ArrowLeft className="w-4 h-4" /> Kembali ke Hasil
+          <Button onClick={() => { setStudent(null); sessionStorage.clear(); navigate("/"); }} variant="outline" className="gap-2">
+            <ArrowLeft className="w-4 h-4" /> Kembali ke Login
           </Button>
         </div>
       </div>

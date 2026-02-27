@@ -70,7 +70,7 @@ export const buildScoreRecord = (
     record: {
       student_id: studentId,
       answers: answerRecords,
-      total_score: String(totalPoints),
+      total_score: String(maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 0),
       duration,
       status: percentage >= 75 ? "Memenuhi KKTP" : "Belum Memenuhi KKTP",
     },
