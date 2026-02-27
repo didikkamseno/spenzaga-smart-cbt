@@ -74,7 +74,7 @@ const Result = () => {
           </div>
 
           <div className="bg-secondary/50 rounded-2xl p-6">
-            <div className="text-5xl font-extrabold text-primary mb-1">{pct}%</div>
+            <div className="text-5xl font-extrabold text-primary mb-1">{pct}</div>
             <p className="text-sm text-muted-foreground">
               Skor: {totalPoints} / {maxPoints}
             </p>
