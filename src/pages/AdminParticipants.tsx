@@ -94,11 +94,11 @@ const AdminParticipants = () => {
     try {
       const data = await importFromExcel(file);
       const mapped: Student[] = data.map((row: any, i: number) => ({
-        student_id: row.student_id || `S${students.length + i + 1}`,
-        absen: String(row.absen || ""),
-        nis: String(row.nis || ""),
-        name: row.name || "",
-        class: row.class || "",
+        student_id: String(row.student_id || row.ID || row.id || `S${students.length + i + 1}`),
+        absen: String(row.absen || row.No || row.no || ""),
+        nis: String(row.nis || row.NIS || ""),
+        name: String(row.name || row.Nama || row.nama || ""),
+        class: String(row.class || row.Kelas || row.kelas || ""),
       }));
       const merged = [...students, ...mapped];
       await set(ref(db, "students"), merged);
@@ -167,10 +167,10 @@ const AdminParticipants = () => {
             <TableBody>
               {filtered.map((s, i) => (
                 <TableRow key={s.student_id}>
-                  <TableCell className="font-medium">{i + 1}</TableCell>
-                  <TableCell className="font-mono text-xs">{s.student_id}</TableCell>
+                  <TableCell>{i + 1}</TableCell>
+                  <TableCell>{s.student_id}</TableCell>
                   <TableCell>{s.nis}</TableCell>
-                  <TableCell className="font-medium">{s.name}</TableCell>
+                  <TableCell>{s.name}</TableCell>
                   <TableCell>{s.class}</TableCell>
                   <TableCell className="text-center">
                     {scores[s.student_id] ? (
