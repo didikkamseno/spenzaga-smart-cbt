@@ -47,19 +47,15 @@ const AdminResults = () => {
 
   useEffect(() => { fetchData(); }, []);
 
-  const maxPoints = questions.reduce((sum, q) => sum + (parseInt(q.points) || 0), 0);
-
   const merged = scores.map((sc) => {
     const stud = students.find((s) => s.student_id === sc.student_id);
-    const totalPts = parseInt(sc.total_score) || 0;
-    const pct = maxPoints > 0 ? Math.round((totalPts / maxPoints) * 100) : 0;
     return {
       ...sc,
       absen: stud?.absen || "-",
       nis: stud?.nis || "-",
       name: stud?.name || "-",
       class: stud?.class || "-",
-      percentage: pct,
+      percentage: parseInt(sc.total_score) || 0,
     };
   });
 
