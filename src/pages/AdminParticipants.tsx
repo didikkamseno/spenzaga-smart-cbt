@@ -110,6 +110,7 @@ const AdminParticipants = () => {
 
   const handleExport = () => {
     const data = filtered.map((s) => ({
+      ID: s.student_id,
       No: s.absen,
       NIS: s.nis,
       Nama: s.name,
@@ -155,6 +156,7 @@ const AdminParticipants = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">No</TableHead>
+                <TableHead>ID</TableHead>
                 <TableHead>NIS</TableHead>
                 <TableHead>Nama</TableHead>
                 <TableHead>Kelas</TableHead>
@@ -166,6 +168,7 @@ const AdminParticipants = () => {
               {filtered.map((s, i) => (
                 <TableRow key={s.student_id}>
                   <TableCell className="font-medium">{i + 1}</TableCell>
+                  <TableCell className="font-mono text-xs">{s.student_id}</TableCell>
                   <TableCell>{s.nis}</TableCell>
                   <TableCell className="font-medium">{s.name}</TableCell>
                   <TableCell>{s.class}</TableCell>
@@ -189,7 +192,7 @@ const AdminParticipants = () => {
                 </TableRow>
               ))}
               {filtered.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Tidak ada data</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Tidak ada data</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
