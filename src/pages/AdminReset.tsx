@@ -192,7 +192,7 @@ const AdminReset = () => {
                   <TableRow key={s.student_id}>
                     <TableCell>{i + 1}</TableCell>
                     <TableCell>{s.nis}</TableCell>
-                    <TableCell className="font-medium">{s.name}</TableCell>
+                    <TableCell>{s.name}</TableCell>
                     <TableCell>{s.class}</TableCell>
                     <TableCell className="text-center">
                       {hasScore ? (

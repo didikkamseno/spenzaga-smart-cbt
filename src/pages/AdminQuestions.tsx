@@ -173,7 +173,7 @@ const AdminQuestions = () => {
               {filtered.map((q, i) => (
                 <TableRow key={q.question_id}>
                   <TableCell>{i + 1}</TableCell>
-                  <TableCell className="font-mono text-xs">{q.question_id}</TableCell>
+                  <TableCell>{q.question_id}</TableCell>
                   <TableCell>
                     <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full whitespace-nowrap">
                       {typeLabels[q.question_type] || q.question_type}

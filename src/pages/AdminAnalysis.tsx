@@ -184,9 +184,9 @@ const AdminAnalysis = () => {
               {analysis.map((a, i) => (
                 <TableRow key={a.id}>
                   <TableCell>{i + 1}</TableCell>
-                  <TableCell className="font-mono text-xs">{a.id}</TableCell>
-                  <TableCell className="max-w-xs truncate text-sm">{a.text}</TableCell>
-                  <TableCell className="text-center font-mono">{a.difficulty}</TableCell>
+                  <TableCell>{a.id}</TableCell>
+                  <TableCell className="max-w-xs truncate">{a.text}</TableCell>
+                  <TableCell className="text-center">{a.difficulty}</TableCell>
                   <TableCell className="text-center">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       a.diffLabel === "Mudah" ? "bg-success/10 text-success" :
@@ -194,7 +194,7 @@ const AdminAnalysis = () => {
                       "bg-accent/10 text-accent"
                     }`}>{a.diffLabel}</span>
                   </TableCell>
-                  <TableCell className="text-center font-mono">{a.discrimination}</TableCell>
+                  <TableCell className="text-center">{a.discrimination}</TableCell>
                   <TableCell className="text-center">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       a.discLabel === "Baik" ? "bg-success/10 text-success" :
@@ -202,8 +202,8 @@ const AdminAnalysis = () => {
                       "bg-accent/10 text-accent"
                     }`}>{a.discLabel}</span>
                   </TableCell>
-                  <TableCell className="text-center text-sm">{a.distractorEffectiveness}</TableCell>
-                  <TableCell className="text-center font-mono">{a.validity}</TableCell>
+                  <TableCell className="text-center">{a.distractorEffectiveness}</TableCell>
+                  <TableCell className="text-center">{a.validity}</TableCell>
                   <TableCell className="text-center">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       a.validLabel === "Tinggi" ? "bg-success/10 text-success" :

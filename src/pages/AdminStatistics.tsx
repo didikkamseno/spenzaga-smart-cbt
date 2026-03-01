@@ -184,10 +184,10 @@ const AdminStatistics = () => {
             <TableBody>
               {classStats.map((c) => (
                 <TableRow key={c.class}>
-                  <TableCell className="font-medium">{c.class}</TableCell>
+                  <TableCell>{c.class}</TableCell>
                   <TableCell className="text-center">{c.total}</TableCell>
                   <TableCell className="text-center">{c.done}</TableCell>
-                  <TableCell className="text-center font-bold">{c.avg}</TableCell>
+                  <TableCell className="text-center">{c.avg}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
