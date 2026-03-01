@@ -40,11 +40,7 @@ const AdminStatistics = () => {
     fetch();
   }, []);
 
-  const maxPoints = questions.reduce((s, q) => s + (parseInt(q.points) || 0), 0);
-  const percentages = scores.map((sc) => {
-    const pts = parseInt(sc.total_score) || 0;
-    return maxPoints > 0 ? Math.round((pts / maxPoints) * 100) : 0;
-  });
+  const percentages = scores.map((sc) => parseInt(sc.total_score) || 0);
 
   const avg = percentages.length > 0 ? Math.round(percentages.reduce((s, v) => s + v, 0) / percentages.length) : 0;
   const highest = percentages.length > 0 ? Math.max(...percentages) : 0;
@@ -67,8 +63,7 @@ const AdminStatistics = () => {
     const classScores = classStudents.map((st) => {
       const sc = scores.find((s) => s.student_id === st.student_id);
       if (!sc) return null;
-      const pts = parseInt(sc.total_score) || 0;
-      return maxPoints > 0 ? Math.round((pts / maxPoints) * 100) : 0;
+      return parseInt(sc.total_score) || 0;
     }).filter((v): v is number => v !== null);
     const classAvg = classScores.length > 0 ? Math.round(classScores.reduce((s, v) => s + v, 0) / classScores.length) : 0;
     return { class: cls, total: classStudents.length, done: classScores.length, avg: classAvg };
