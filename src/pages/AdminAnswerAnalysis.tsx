@@ -130,8 +130,8 @@ const AdminAnswerAnalysis = () => {
               {filtered.map((m, i) => (
                 <TableRow key={m.student_id}>
                   <TableCell className="sticky left-0 bg-card z-10">{i + 1}</TableCell>
-                  <TableCell className="sticky left-10 bg-card z-10 text-xs">{m.nis}</TableCell>
-                  <TableCell className="sticky left-24 bg-card z-10 font-medium text-sm">{m.name}</TableCell>
+                  <TableCell className="sticky left-10 bg-card z-10">{m.nis}</TableCell>
+                  <TableCell className="sticky left-24 bg-card z-10">{m.name}</TableCell>
                   <TableCell>{m.class}</TableCell>
                   {questions.map((q) => {
                     const val = m.answers[q.question_id];

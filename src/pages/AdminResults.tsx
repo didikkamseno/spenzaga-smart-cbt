@@ -139,10 +139,10 @@ const AdminResults = () => {
                   <TableCell>{i + 1}</TableCell>
                   <TableCell>{m.absen}</TableCell>
                   <TableCell>{m.nis}</TableCell>
-                  <TableCell className="font-medium">{m.name}</TableCell>
+                  <TableCell>{m.name}</TableCell>
                   <TableCell>{m.class}</TableCell>
                   <TableCell className="text-center">{m.percentage}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{m.duration}</TableCell>
+                  <TableCell>{m.duration}</TableCell>
                   <TableCell>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${m.status === "Memenuhi KKTP" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
                       {m.status}
