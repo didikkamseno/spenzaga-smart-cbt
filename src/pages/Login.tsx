@@ -86,6 +86,9 @@ const Login = () => {
             )}
             {loading ? "Memuat..." : "Masuk"}
           </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            <a href="/admin/login" className="text-primary hover:underline">Login sebagai Admin</a>
+          </p>
         </CardContent>
       </Card>
     </div>
