@@ -174,9 +174,12 @@ const AdminQuestions = () => {
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button size="sm" onClick={openAdd} className="gap-1.5"><Plus className="w-4 h-4" />Tambah</Button>
-          <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} className="gap-1.5"><Upload className="w-4 h-4" />Impor</Button>
-          <Button size="sm" variant="outline" onClick={handleExport} className="gap-1.5"><Download className="w-4 h-4" />Ekspor</Button>
+          <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} className="gap-1.5"><Upload className="w-4 h-4" />Impor Excel</Button>
+          <Button size="sm" variant="outline" onClick={handleExport} className="gap-1.5"><Download className="w-4 h-4" />Ekspor Excel</Button>
+          <Button size="sm" variant="outline" onClick={() => docRef.current?.click()} className="gap-1.5"><FileUp className="w-4 h-4" />Impor Word</Button>
+          <Button size="sm" variant="outline" onClick={handleExportWord} className="gap-1.5"><FileDown className="w-4 h-4" />Ekspor Word</Button>
           <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
+          <input ref={docRef} type="file" accept=".docx,.doc" className="hidden" onChange={handleImportWord} />
         </div>
       </div>
 
