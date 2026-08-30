@@ -45,6 +45,7 @@ const AdminQuestions = () => {
   const [form, setForm] = useState<Question>({ ...emptyForm });
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const docRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const fetchData = async () => {
