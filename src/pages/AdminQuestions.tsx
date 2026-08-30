@@ -20,7 +20,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Download, Upload, Plus, Pencil, Trash2, Search, Loader2, AlertTriangle } from "lucide-react";
+import { Download, Upload, Plus, Pencil, Trash2, Search, Loader2, AlertTriangle, FileUp, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const typeLabels: Record<string, string> = {
