@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { db, ref, get, set } from "@/lib/firebase";
 import { Question } from "@/types/exam";
 import { exportToExcel, importFromExcel } from "@/lib/excelUtils";
+import { exportToWord, importFromWord } from "@/lib/wordUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
