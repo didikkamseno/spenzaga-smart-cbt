@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { db, ref, get, set } from "@/lib/firebase";
 import { Question } from "@/types/exam";
 import { exportToExcel, importFromExcel } from "@/lib/excelUtils";
+import { exportToWord, importFromWord } from "@/lib/wordUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Download, Upload, Plus, Pencil, Trash2, Search, Loader2, AlertTriangle } from "lucide-react";
+import { Download, Upload, Plus, Pencil, Trash2, Search, Loader2, AlertTriangle, FileUp, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const typeLabels: Record<string, string> = {
@@ -44,6 +45,7 @@ const AdminQuestions = () => {
   const [form, setForm] = useState<Question>({ ...emptyForm });
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const docRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const fetchData = async () => {
@@ -87,33 +89,49 @@ const AdminQuestions = () => {
     toast({ title: "Dihapus" });
   };
 
+  const mapRows = (data: any[]): Question[] =>
+    data.map((row: any, i: number) => ({
+      question_id: row.question_id || `Q${questions.length + i + 1}`,
+      question_type: row.question_type || "MC",
+      image: row.image || "", video: row.video || "", audio: row.audio || "",
+      question_paragraph: row.question_paragraph || "",
+      question_text: row.question_text || "",
+      answer_1: row.answer_1 || "", answer_2: row.answer_2 || "",
+      answer_3: row.answer_3 || "", answer_4: row.answer_4 || "",
+      correct_feedback: row.correct_feedback || "Well done!",
+      incorrect_feedback: row.incorrect_feedback || "Sorry, the answer is incorrect...",
+      points: String(row.points || "10"),
+    }));
+
+  const saveImported = async (mapped: Question[]) => {
+    const merged = [...questions, ...mapped];
+    await set(ref(db, "questions"), merged);
+    setQuestions(merged);
+    toast({ title: "Impor berhasil", description: `${mapped.length} soal ditambahkan` });
+  };
+
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const data = await importFromExcel(file);
-      const mapped: Question[] = data.map((row: any, i: number) => ({
-        question_id: row.question_id || `Q${questions.length + i + 1}`,
-        question_type: row.question_type || "MC",
-        image: row.image || "", video: row.video || "", audio: row.audio || "",
-        question_paragraph: row.question_paragraph || "",
-        question_text: row.question_text || "",
-        answer_1: row.answer_1 || "", answer_2: row.answer_2 || "",
-        answer_3: row.answer_3 || "", answer_4: row.answer_4 || "",
-        correct_feedback: row.correct_feedback || "Well done!",
-        incorrect_feedback: row.incorrect_feedback || "Sorry, the answer is incorrect...",
-        points: String(row.points || "10"),
-      }));
-      const merged = [...questions, ...mapped];
-      await set(ref(db, "questions"), merged);
-      setQuestions(merged);
-      toast({ title: "Impor berhasil", description: `${mapped.length} soal ditambahkan` });
+      await saveImported(mapRows(await importFromExcel(file)));
     } catch { toast({ title: "Error", description: "Format tidak valid", variant: "destructive" }); }
     e.target.value = "";
   };
 
-  const handleExport = () => {
-    const data = questions.map((q, i) => ({
+  const handleImportWord = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      await saveImported(mapRows(await importFromWord(file)));
+    } catch {
+      toast({ title: "Error", description: "Format dokumen tidak valid. Gunakan file .docx berisi tabel soal.", variant: "destructive" });
+    }
+    e.target.value = "";
+  };
+
+  const buildRows = () =>
+    questions.map((q, i) => ({
       No: i + 1,
       question_id: q.question_id,
       question_type: q.question_type,
@@ -130,7 +148,13 @@ const AdminQuestions = () => {
       incorrect_feedback: q.incorrect_feedback,
       points: q.points,
     }));
-    exportToExcel(data, "Bank_Soal");
+
+  const handleExport = () => exportToExcel(buildRows(), "Bank_Soal");
+
+  const handleExportWord = async () => {
+    try {
+      await exportToWord(buildRows(), "Bank_Soal", "Bank Soal");
+    } catch { toast({ title: "Error", description: "Gagal membuat dokumen", variant: "destructive" }); }
   };
 
   const filtered = questions.filter(
@@ -150,9 +174,12 @@ const AdminQuestions = () => {
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button size="sm" onClick={openAdd} className="gap-1.5"><Plus className="w-4 h-4" />Tambah</Button>
-          <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} className="gap-1.5"><Upload className="w-4 h-4" />Impor</Button>
-          <Button size="sm" variant="outline" onClick={handleExport} className="gap-1.5"><Download className="w-4 h-4" />Ekspor</Button>
+          <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} className="gap-1.5"><Upload className="w-4 h-4" />Impor Excel</Button>
+          <Button size="sm" variant="outline" onClick={handleExport} className="gap-1.5"><Download className="w-4 h-4" />Ekspor Excel</Button>
+          <Button size="sm" variant="outline" onClick={() => docRef.current?.click()} className="gap-1.5"><FileUp className="w-4 h-4" />Impor Word</Button>
+          <Button size="sm" variant="outline" onClick={handleExportWord} className="gap-1.5"><FileDown className="w-4 h-4" />Ekspor Word</Button>
           <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
+          <input ref={docRef} type="file" accept=".docx,.doc" className="hidden" onChange={handleImportWord} />
         </div>
       </div>
 
