@@ -136,6 +136,7 @@ const AdminResults = () => {
                 <TableHead className="text-center">Skor</TableHead>
                 <TableHead>Waktu</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="text-center">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -153,16 +154,54 @@ const AdminResults = () => {
                       {m.status}
                     </span>
                   </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1.5 justify-center">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5"
+                        onClick={() => {
+                          setReviewData({ score: m as ScoreRecord, name: m.name });
+                          setReviewOpen(true);
+                        }}
+                      >
+                        <Eye className="w-4 h-4" /> Review
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5"
+                        onClick={() =>
+                          generateCertificatePdf(
+                            { student_id: m.student_id, absen: m.absen, nis: m.nis, name: m.name, class: m.class },
+                            m as ScoreRecord,
+                            m.percentage
+                          )
+                        }
+                      >
+                        <Award className="w-4 h-4" /> Sertifikat
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
               {filtered.length === 0 && (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Tidak ada data</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Tidak ada data</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      <AdminReviewDialog
+        open={reviewOpen}
+        onOpenChange={setReviewOpen}
+        questions={questions}
+        score={reviewData?.score || null}
+        studentName={reviewData?.name}
+      />
     </div>
+
   );
 };
 
