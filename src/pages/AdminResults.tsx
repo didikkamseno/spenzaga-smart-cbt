@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { db, ref, get } from "@/lib/firebase";
-import { Student } from "@/types/exam";
+import { Student, Question, ScoreRecord } from "@/types/exam";
 import { exportToExcel } from "@/lib/excelUtils";
+import { generateCertificatePdf } from "@/lib/certificatePdf";
+import AdminReviewDialog from "@/components/AdminReviewDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,15 +13,18 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Download, Search, Loader2, Trophy, RefreshCw } from "lucide-react";
+import { Download, Search, Loader2, Trophy, RefreshCw, Eye, Award } from "lucide-react";
 
 const AdminResults = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [scores, setScores] = useState<any[]>([]);
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("all");
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewData, setReviewData] = useState<{ score: ScoreRecord; name: string } | null>(null);
+
 
   const fetchData = async () => {
     setLoading(true);
