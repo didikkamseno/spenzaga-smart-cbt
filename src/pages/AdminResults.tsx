@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { db, ref, get } from "@/lib/firebase";
-import { Student } from "@/types/exam";
+import { Student, Question, ScoreRecord } from "@/types/exam";
 import { exportToExcel } from "@/lib/excelUtils";
+import { generateCertificatePdf } from "@/lib/certificatePdf";
+import AdminReviewDialog from "@/components/AdminReviewDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,15 +13,18 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Download, Search, Loader2, Trophy, RefreshCw } from "lucide-react";
+import { Download, Search, Loader2, Trophy, RefreshCw, Eye, Award } from "lucide-react";
 
 const AdminResults = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [scores, setScores] = useState<any[]>([]);
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("all");
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewData, setReviewData] = useState<{ score: ScoreRecord; name: string } | null>(null);
+
 
   const fetchData = async () => {
     setLoading(true);
@@ -131,6 +136,7 @@ const AdminResults = () => {
                 <TableHead className="text-center">Skor</TableHead>
                 <TableHead>Waktu</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="text-center">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -148,16 +154,54 @@ const AdminResults = () => {
                       {m.status}
                     </span>
                   </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1.5 justify-center">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5"
+                        onClick={() => {
+                          setReviewData({ score: m as ScoreRecord, name: m.name });
+                          setReviewOpen(true);
+                        }}
+                      >
+                        <Eye className="w-4 h-4" /> Review
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5"
+                        onClick={() =>
+                          generateCertificatePdf(
+                            { student_id: m.student_id, absen: m.absen, nis: m.nis, name: m.name, class: m.class },
+                            m as ScoreRecord,
+                            m.percentage
+                          )
+                        }
+                      >
+                        <Award className="w-4 h-4" /> Sertifikat
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
               {filtered.length === 0 && (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Tidak ada data</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Tidak ada data</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      <AdminReviewDialog
+        open={reviewOpen}
+        onOpenChange={setReviewOpen}
+        questions={questions}
+        score={reviewData?.score || null}
+        studentName={reviewData?.name}
+      />
     </div>
+
   );
 };
 
