@@ -36,4 +36,18 @@ export interface ScoreRecord {
   total_score: string;
   duration: string;
   status: string;
+  exam_id?: string;
+  exam_name?: string;
+  submitted_at?: string;
+}
+
+export interface ExamPackage {
+  exam_id: string;
+  name: string;
+  /** local datetime string: YYYY-MM-DDTHH:mm */
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  review_duration: number;
+  blocked: boolean;
 }

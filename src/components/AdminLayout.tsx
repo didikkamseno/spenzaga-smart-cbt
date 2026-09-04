@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  Users, FileText, Trophy, BarChart3, PieChart, RotateCcw, LogOut, Menu, X, Shield, ClipboardList,
+  Users, FileText, Trophy, BarChart3, PieChart, RotateCcw, LogOut, Menu, X, Shield, ClipboardList, CalendarClock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AdminExamProvider } from "@/context/AdminExamContext";
+import AdminExamSelector from "@/components/AdminExamSelector";
 
 const navItems = [
+  { path: "/admin/exams", label: "Paket Ujian", icon: CalendarClock },
   { path: "/admin/participants", label: "Peserta Ujian", icon: Users },
   { path: "/admin/questions", label: "Bank Soal", icon: FileText },
   { path: "/admin/results", label: "Hasil Ujian", icon: Trophy },
@@ -32,6 +35,7 @@ const AdminLayout = () => {
   };
 
   return (
+    <AdminExamProvider>
     <div className="min-h-screen bg-background flex font-sans">
       {/* Mobile overlay */}
       {sidebarOpen && (
@@ -99,12 +103,14 @@ const AdminLayout = () => {
           <h1 className="text-lg font-bold text-foreground">
             {navItems.find((n) => n.path === location.pathname)?.label || "Admin"}
           </h1>
+          <div className="ml-auto"><AdminExamSelector /></div>
         </header>
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
           <Outlet />
         </main>
       </div>
     </div>
+    </AdminExamProvider>
   );
 };
 
