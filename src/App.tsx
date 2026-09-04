@@ -20,6 +20,7 @@ import AdminAnalysis from "./pages/AdminAnalysis";
 import AdminStatistics from "./pages/AdminStatistics";
 import AdminReset from "./pages/AdminReset";
 import AdminAnswerAnalysis from "./pages/AdminAnswerAnalysis";
+import AdminExams from "./pages/AdminExams";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/certificate" element={<Certificate />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminLayout />}>
+              <Route path="exams" element={<AdminExams />} />
               <Route path="participants" element={<AdminParticipants />} />
               <Route path="questions" element={<AdminQuestions />} />
               <Route path="results" element={<AdminResults />} />
