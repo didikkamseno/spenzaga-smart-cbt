@@ -31,6 +31,7 @@ const AdminResults = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setScores([]); setQuestions([]);
     try {
       const [studSnap, scoreSnap, qSnap] = await Promise.all([
         get(ref(db, "students")),
@@ -78,7 +79,7 @@ const AdminResults = () => {
       No: i + 1, Absen: m.absen, NIS: m.nis, Nama: m.name, Kelas: m.class,
       Skor: m.percentage, Waktu: m.duration, Status: m.status,
     }));
-    exportToExcel(data, "Hasil_Ujian");
+    exportToExcel(data, `Hasil_${(activeExam?.name || "Ujian").replace(/\s+/g, "_")}`);
   };
 
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;

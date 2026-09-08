@@ -26,6 +26,7 @@ const AdminAnswerAnalysis = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setScores([]); setQuestions([]);
     try {
       const [studSnap, scoreSnap, qSnap] = await Promise.all([
         get(ref(db, "students")),

@@ -28,6 +28,7 @@ const AdminStatistics = () => {
   useEffect(() => {
     const fetch = async () => {
       setLoading(true);
+      setScores([]); setQuestions([]);
       try {
         const [studSnap, scoreSnap, qSnap] = await Promise.all([
           get(ref(db, "students")),
