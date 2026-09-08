@@ -12,8 +12,11 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Download, Search, Loader2, RefreshCw } from "lucide-react";
+import { useAdminExam } from "@/context/AdminExamContext";
+import { questionsPath, scoresPath } from "@/lib/exams";
 
 const AdminAnswerAnalysis = () => {
+  const { examId, activeExam } = useAdminExam();
   const [students, setStudents] = useState<Student[]>([]);
   const [scores, setScores] = useState<any[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -26,8 +29,8 @@ const AdminAnswerAnalysis = () => {
     try {
       const [studSnap, scoreSnap, qSnap] = await Promise.all([
         get(ref(db, "students")),
-        get(ref(db, "scores")),
-        get(ref(db, "questions")),
+        get(ref(db, scoresPath(examId))),
+        get(ref(db, questionsPath(examId))),
       ]);
       if (studSnap.exists()) {
         const d = studSnap.val();
@@ -45,7 +48,7 @@ const AdminAnswerAnalysis = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [examId]);
 
   const classes = [...new Set(students.map((s) => s.class))].sort();
 

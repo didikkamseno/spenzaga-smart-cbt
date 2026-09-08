@@ -19,6 +19,8 @@ import {
   Download, Upload, Plus, Pencil, Trash2, Search, CheckCircle2, Clock, Loader2, AlertTriangle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAdminExam } from "@/context/AdminExamContext";
+import { questionsPath, scoresPath } from "@/lib/exams";
 
 const AdminParticipants = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -37,7 +39,7 @@ const AdminParticipants = () => {
     try {
       const [studSnap, scoreSnap] = await Promise.all([
         get(ref(db, "students")),
-        get(ref(db, "scores")),
+        get(ref(db, scoresPath(examId))),
       ]);
       if (studSnap.exists()) {
         const data = studSnap.val();
@@ -54,7 +56,7 @@ const AdminParticipants = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [examId]);
 
   const openAdd = () => {
     setEditStudent(null);
