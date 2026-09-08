@@ -14,8 +14,11 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Download, Search, Loader2, Trophy, RefreshCw, Eye, Award } from "lucide-react";
+import { useAdminExam } from "@/context/AdminExamContext";
+import { questionsPath, scoresPath } from "@/lib/exams";
 
 const AdminResults = () => {
+  const { examId, activeExam } = useAdminExam();
   const [students, setStudents] = useState<Student[]>([]);
   const [scores, setScores] = useState<any[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -28,11 +31,12 @@ const AdminResults = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setScores([]); setQuestions([]);
     try {
       const [studSnap, scoreSnap, qSnap] = await Promise.all([
         get(ref(db, "students")),
-        get(ref(db, "scores")),
-        get(ref(db, "questions")),
+        get(ref(db, scoresPath(examId))),
+        get(ref(db, questionsPath(examId))),
       ]);
       if (studSnap.exists()) {
         const d = studSnap.val();
@@ -50,7 +54,7 @@ const AdminResults = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [examId]);
 
   const merged = scores.map((sc) => {
     const stud = students.find((s) => s.student_id === sc.student_id);
@@ -75,7 +79,7 @@ const AdminResults = () => {
       No: i + 1, Absen: m.absen, NIS: m.nis, Nama: m.name, Kelas: m.class,
       Skor: m.percentage, Waktu: m.duration, Status: m.status,
     }));
-    exportToExcel(data, "Hasil_Ujian");
+    exportToExcel(data, `Hasil_${(activeExam?.name || "Ujian").replace(/\s+/g, "_")}`);
   };
 
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;

@@ -10,6 +10,8 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Download, Loader2, Users, TrendingUp, Award, Target } from "lucide-react";
+import { useAdminExam } from "@/context/AdminExamContext";
+import { questionsPath, scoresPath } from "@/lib/exams";
 
 const COLORS = [
   "hsl(215, 70%, 25%)", "hsl(142, 71%, 35%)", "hsl(38, 92%, 50%)",
@@ -17,6 +19,7 @@ const COLORS = [
 ];
 
 const AdminStatistics = () => {
+  const { examId, activeExam } = useAdminExam();
   const [students, setStudents] = useState<Student[]>([]);
   const [scores, setScores] = useState<any[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -25,11 +28,12 @@ const AdminStatistics = () => {
   useEffect(() => {
     const fetch = async () => {
       setLoading(true);
+      setScores([]); setQuestions([]);
       try {
         const [studSnap, scoreSnap, qSnap] = await Promise.all([
           get(ref(db, "students")),
-          get(ref(db, "scores")),
-          get(ref(db, "questions")),
+          get(ref(db, scoresPath(examId))),
+          get(ref(db, questionsPath(examId))),
         ]);
         if (studSnap.exists()) { const d = studSnap.val(); setStudents(Array.isArray(d) ? d : Object.values(d)); }
         if (scoreSnap.exists()) { const d = scoreSnap.val(); setScores(Array.isArray(d) ? d : Object.values(d)); }
@@ -38,7 +42,7 @@ const AdminStatistics = () => {
       setLoading(false);
     };
     fetch();
-  }, []);
+  }, [examId]);
 
   const percentages = scores.map((sc) => parseInt(sc.total_score) || 0);
 

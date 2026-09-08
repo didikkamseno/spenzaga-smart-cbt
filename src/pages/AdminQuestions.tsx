@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/select";
 import { Download, Upload, Plus, Pencil, Trash2, Search, Loader2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAdminExam } from "@/context/AdminExamContext";
+import { questionsPath, scoresPath } from "@/lib/exams";
 
 const typeLabels: Record<string, string> = {
   TF: "Benar/Salah", MC: "Pilihan Ganda", MR: "Jawaban Ganda",
@@ -36,6 +38,7 @@ const emptyForm: Question = {
 };
 
 const AdminQuestions = () => {
+  const { examId, activeExam } = useAdminExam();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -47,9 +50,11 @@ const AdminQuestions = () => {
   const { toast } = useToast();
 
   const fetchData = async () => {
+    if (!examId) { setQuestions([]); setLoading(false); return; }
     setLoading(true);
+    setQuestions([]);
     try {
-      const snap = await get(ref(db, "questions"));
+      const snap = await get(ref(db, questionsPath(examId)));
       if (snap.exists()) {
         const d = snap.val();
         setQuestions(Array.isArray(d) ? d : Object.values(d));
@@ -58,7 +63,7 @@ const AdminQuestions = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [examId]);
 
   const openAdd = () => {
     setEditQ(null);
@@ -72,7 +77,7 @@ const AdminQuestions = () => {
     const updated = editQ
       ? questions.map((q) => (q.question_id === editQ.question_id ? { ...form } : q))
       : [...questions, { ...form }];
-    await set(ref(db, "questions"), updated);
+    await set(ref(db, questionsPath(examId)), updated);
     setQuestions(updated);
     setDialogOpen(false);
     toast({ title: "Berhasil", description: editQ ? "Soal diperbarui" : "Soal ditambahkan" });
@@ -81,7 +86,7 @@ const AdminQuestions = () => {
   const confirmDelete = async () => {
     if (!deleteId) return;
     const updated = questions.filter((q) => q.question_id !== deleteId);
-    await set(ref(db, "questions"), updated);
+    await set(ref(db, questionsPath(examId)), updated);
     setQuestions(updated);
     setDeleteId(null);
     toast({ title: "Dihapus" });
@@ -103,7 +108,7 @@ const AdminQuestions = () => {
 
   const saveImported = async (mapped: Question[]) => {
     const merged = [...questions, ...mapped];
-    await set(ref(db, "questions"), merged);
+    await set(ref(db, questionsPath(examId)), merged);
     setQuestions(merged);
     toast({ title: "Impor berhasil", description: `${mapped.length} soal ditambahkan` });
   };

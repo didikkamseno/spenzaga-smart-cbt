@@ -62,7 +62,7 @@ const Certificate = () => {
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100, 116, 139);
-    doc.text("Computer Based Test", cx, 58, { align: "center" });
+    doc.text(score.exam_name ? `Computer Based Test — ${score.exam_name}` : "Computer Based Test", cx, 58, { align: "center" });
 
     // Divider line
     doc.setDrawColor(212, 160, 23);

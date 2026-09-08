@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useExam } from "@/context/ExamContext";
 import { db, ref, get, set } from "@/lib/firebase";
 import { Question } from "@/types/exam";
+import { questionsPath, scoresPath, getExamStatus } from "@/lib/exams";
 import { buildScoreRecord } from "@/lib/scoring";
 import QuestionCard from "@/components/QuestionCard";
 import NavigationPanel from "@/components/NavigationPanel";
@@ -16,7 +17,7 @@ import { ChevronLeft, ChevronRight, Send, AlertTriangle, Clock, Loader2, CheckCi
 import { useToast } from "@/hooks/use-toast";
 
 const Exam = () => {
-  const { student } = useExam();
+  const { student, exam } = useExam();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -30,6 +31,8 @@ const Exam = () => {
   const [submitting, setSubmitting] = useState(false);
   const [alreadyTaken, setAlreadyTaken] = useState(false);
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [closedNotice, setClosedNotice] = useState(false);
   const hasSubmitted = useRef(false);
 
   useEffect(() => {
@@ -37,24 +40,28 @@ const Exam = () => {
       navigate("/");
       return;
     }
+    if (!exam) {
+      navigate("/confirmation");
+      return;
+    }
 
     const load = async () => {
       try {
-        const blockedSnap = await get(ref(db, "config/exam_blocked"));
-        if (blockedSnap.exists() && blockedSnap.val() === true) {
-          setAlreadyTaken(true);
+        if (getExamStatus(exam) !== "open") {
+          setClosedNotice(true);
           setLoading(false);
           return;
         }
-        const scoreSnap = await get(ref(db, `scores/${student.student_id}`));
+        const scoreSnap = await get(ref(db, `${scoresPath(exam.exam_id)}/${student.student_id}`));
         if (scoreSnap.exists()) {
           setAlreadyTaken(true);
           setLoading(false);
           return;
         }
-        const qSnap = await get(ref(db, "questions"));
+        const qSnap = await get(ref(db, questionsPath(exam.exam_id)));
         if (qSnap.exists()) {
-          setQuestions(qSnap.val());
+          const d = qSnap.val();
+          setQuestions(Array.isArray(d) ? d.filter(Boolean) : Object.values(d));
         }
       } catch {
         toast({ title: "Error", description: "Gagal memuat soal", variant: "destructive" });
@@ -62,12 +69,24 @@ const Exam = () => {
       setLoading(false);
     };
     load();
-  }, [student]);
+  }, [student, exam]);
+
+  // Deadline = waktu mulai + durasi pengerjaan, dibatasi jam selesai ujian
+  const deadline = (() => {
+    if (!exam) return null;
+    const byDuration = startTime + (Number(exam.duration_minutes) || 90) * 60 * 1000;
+    const endTime = exam.end_time ? new Date(exam.end_time).getTime() : NaN;
+    return isNaN(endTime) ? byDuration : Math.min(byDuration, endTime);
+  })();
 
   useEffect(() => {
-    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - startTime) / 1000)), 1000);
+    const timer = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startTime) / 1000));
+      if (deadline) setRemaining(Math.max(0, Math.floor((deadline - Date.now()) / 1000)));
+    }, 1000);
+    if (deadline) setRemaining(Math.max(0, Math.floor((deadline - Date.now()) / 1000)));
     return () => clearInterval(timer);
-  }, [startTime]);
+  }, [startTime, deadline]);
 
   useEffect(() => {
     const handler = () => {
@@ -120,19 +139,33 @@ const Exam = () => {
     setSubmitting(true);
 
     const duration = formatTime(elapsed);
-    const { record, totalPoints, maxPoints } = buildScoreRecord(student.student_id, questions, answers, duration);
+    const built = buildScoreRecord(student.student_id, questions, answers, duration);
+    const { totalPoints, maxPoints } = built;
+    const record = {
+      ...built.record,
+      exam_id: exam?.exam_id || "",
+      exam_name: exam?.name || "",
+      submitted_at: new Date().toISOString(),
+    };
 
     try {
-      await set(ref(db, `scores/${student.student_id}`), record);
+      await set(ref(db, `${scoresPath(exam!.exam_id)}/${student.student_id}`), record);
       navigate("/result", {
-        state: { score: record, totalPoints, maxPoints, student },
+        state: { score: record, totalPoints, maxPoints, student, exam },
       });
     } catch {
       toast({ title: "Error", description: "Gagal mengirim jawaban", variant: "destructive" });
       hasSubmitted.current = false;
       setSubmitting(false);
     }
-  }, [student, questions, answers, elapsed, navigate]);
+  }, [student, exam, questions, answers, elapsed, navigate]);
+
+  useEffect(() => {
+    if (remaining === 0 && !loading && questions.length > 0 && !hasSubmitted.current) {
+      toast({ title: "⏰ Waktu Habis", description: "Jawaban otomatis terkirim.", variant: "destructive" });
+      handleSubmit();
+    }
+  }, [remaining, loading, questions.length, handleSubmit]);
 
   useEffect(() => {
     if (violations >= 5 && !hasSubmitted.current) {
@@ -162,6 +195,21 @@ const Exam = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (closedNotice) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="max-w-md w-full text-center p-8">
+          <AlertTriangle className="w-16 h-16 text-accent mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-foreground mb-2">Ujian Tidak Tersedia</h2>
+          <p className="text-muted-foreground mb-4">
+            Ujian belum dibuka, sudah ditutup, atau sedang diblokir oleh guru.
+          </p>
+          <Button onClick={() => navigate("/confirmation")}>Kembali</Button>
+        </Card>
       </div>
     );
   }
@@ -203,9 +251,11 @@ const Exam = () => {
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4" />
-            <span className="font-mono font-bold text-sm">{formatTime(elapsed)}</span>
+            <span className={`font-mono font-bold text-sm ${remaining !== null && remaining <= 60 ? "text-destructive-foreground bg-destructive/70 px-2 rounded" : ""}`}>
+              {remaining !== null ? formatTime(remaining) : formatTime(elapsed)}
+            </span>
           </div>
-          <h1 className="text-sm font-bold hidden sm:block">CBT SMP Negeri 1 Purbalingga</h1>
+          <h1 className="text-sm font-bold hidden sm:block">{exam?.name || "CBT SMP Negeri 1 Purbalingga"}</h1>
           <div className="flex items-center gap-2">
             {violations > 0 && (
               <span className="text-xs bg-destructive/80 px-2 py-0.5 rounded-full">

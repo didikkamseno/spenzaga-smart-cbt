@@ -10,7 +10,7 @@ import { useExam } from "@/context/ExamContext";
 const Result = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setStudent } = useExam();
+  const { setStudent, exam, setExam } = useExam();
   const [reviewUsed, setReviewUsed] = useState(false);
   const state = location.state as {
     score: ScoreRecord;
@@ -70,6 +70,9 @@ const Result = () => {
 
           <div>
             <h1 className="text-2xl font-bold text-foreground mb-1">Hasil Ujian</h1>
+            {(exam?.name || score.exam_name) && (
+              <p className="text-sm text-foreground">{exam?.name || score.exam_name}</p>
+            )}
             <p className="text-muted-foreground text-sm">{score.status}</p>
           </div>
 

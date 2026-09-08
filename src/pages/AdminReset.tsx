@@ -14,8 +14,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RotateCcw, Lock, Unlock, Loader2, CheckCircle2, Clock, AlertTriangle, Search, Eye, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAdminExam } from "@/context/AdminExamContext";
+import { scoresPath, saveExam, getExamStatus, statusLabel, formatSchedule } from "@/lib/exams";
 
 const AdminReset = () => {
+  const { examId, activeExam, refreshExams } = useAdminExam();
   const [students, setStudents] = useState<Student[]>([]);
   const [scores, setScores] = useState<any[]>([]);
   const [examBlocked, setExamBlocked] = useState(false);
@@ -29,41 +32,40 @@ const AdminReset = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [studSnap, scoreSnap, configSnap, reviewSnap] = await Promise.all([
+      const [studSnap, scoreSnap] = await Promise.all([
         get(ref(db, "students")),
-        get(ref(db, "scores")),
-        get(ref(db, "config/exam_blocked")),
-        get(ref(db, "config/review_duration")),
+        get(ref(db, examId ? scoresPath(examId) : "exam_scores/__none__")),
       ]);
       if (studSnap.exists()) { const d = studSnap.val(); setStudents(Array.isArray(d) ? d : Object.values(d)); }
-      if (scoreSnap.exists()) { const d = scoreSnap.val(); setScores(Array.isArray(d) ? d : Object.values(d)); }
-      if (configSnap.exists()) setExamBlocked(configSnap.val());
-      if (reviewSnap.exists()) setReviewDuration(reviewSnap.val());
+      setScores(scoreSnap.exists() ? Object.values(scoreSnap.val()) : []);
+      setExamBlocked(activeExam?.blocked === true);
+      setReviewDuration(activeExam?.review_duration || 60);
     } catch {}
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [examId, activeExam?.blocked, activeExam?.review_duration]);
 
   const scoreMap = new Map(scores.map((s) => [s.student_id, s]));
 
   const resetStudent = async (studentId: string) => {
-    const updated = scores.filter((s) => s.student_id !== studentId);
-    await set(ref(db, "scores"), updated.length > 0 ? updated : null);
-    setScores(updated);
+    await set(ref(db, `${scoresPath(examId)}/${studentId}`), null);
+    setScores(scores.filter((s) => s.student_id !== studentId));
     setConfirmResetStudent(null);
     toast({ title: "Berhasil", description: "Hasil ujian siswa telah direset" });
   };
 
   const resetAll = async () => {
-    await set(ref(db, "scores"), null);
+    await set(ref(db, scoresPath(examId)), null);
     setScores([]);
     setConfirmResetAll(false);
     toast({ title: "Berhasil", description: "Semua hasil ujian telah direset" });
   };
 
   const toggleBlock = async (blocked: boolean) => {
-    await set(ref(db, "config/exam_blocked"), blocked);
+    if (!activeExam) return;
+    await saveExam({ ...activeExam, blocked });
+    await refreshExams();
     setExamBlocked(blocked);
     toast({
       title: blocked ? "Ujian Diblokir" : "Ujian Dibuka",
@@ -137,7 +139,9 @@ const AdminReset = () => {
                 size="sm"
                 className="gap-1.5"
                 onClick={async () => {
-                  await set(ref(db, "config/review_duration"), reviewDuration);
+                  if (!activeExam) return;
+                  await saveExam({ ...activeExam, review_duration: reviewDuration });
+                  await refreshExams();
                   toast({ title: "Berhasil", description: `Durasi review diatur ke ${reviewDuration} detik` });
                 }}
               >
