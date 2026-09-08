@@ -23,6 +23,7 @@ import { useAdminExam } from "@/context/AdminExamContext";
 import { questionsPath, scoresPath } from "@/lib/exams";
 
 const AdminParticipants = () => {
+  const { examId } = useAdminExam();
   const [students, setStudents] = useState<Student[]>([]);
   const [scores, setScores] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
