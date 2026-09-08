@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { db, ref, get } from "@/lib/firebase";
 import { Question, ScoreRecord, Student } from "@/types/exam";
 import { useExam } from "@/context/ExamContext";
+import { questionsPath } from "@/lib/exams";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle2, XCircle, Clock } from "lucide-react";
@@ -12,20 +13,20 @@ const clean = (s: string) => s.replace(/^\*/, "");
 const Review = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setStudent } = useExam();
+  const { setStudent, exam } = useExam();
   const state = location.state as { score: ScoreRecord; student: Student } | null;
   const [questions, setQuestions] = useState<Question[]>([]);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   useEffect(() => {
     if (!state) { navigate("/"); return; }
-    Promise.all([
-      get(ref(db, "questions")),
-      get(ref(db, "config/review_duration")),
-    ]).then(([qSnap, durSnap]) => {
-      if (qSnap.exists()) setQuestions(qSnap.val());
-      const dur = durSnap.exists() ? durSnap.val() : 60;
-      setTimeLeft(dur);
+    const examId = exam?.exam_id || state.score.exam_id || "";
+    get(ref(db, questionsPath(examId))).then((qSnap) => {
+      if (qSnap.exists()) {
+        const d = qSnap.val();
+        setQuestions(Array.isArray(d) ? d.filter(Boolean) : Object.values(d));
+      }
+      setTimeLeft(Number(exam?.review_duration) || 60);
     });
   }, [state]);
 
@@ -62,7 +63,7 @@ const Review = () => {
           <Button variant="ghost" size="icon" onClick={() => { setStudent(null); sessionStorage.clear(); navigate("/"); }} className="text-primary-foreground hover:bg-primary-foreground/10">
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-sm font-bold">Review Soal</h1>
+          <h1 className="text-sm font-bold">Review Soal{exam?.name ? ` — ${exam.name}` : ""}</h1>
           {timeLeft !== null && (
             <div className="ml-auto flex items-center gap-1.5 bg-primary-foreground/10 px-3 py-1 rounded-full">
               <Clock className="w-3.5 h-3.5" />

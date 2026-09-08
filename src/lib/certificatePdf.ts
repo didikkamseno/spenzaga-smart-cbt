@@ -35,7 +35,7 @@ export const generateCertificatePdf = (student: Student, score: ScoreRecord, sco
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100, 116, 139);
-  doc.text("Computer Based Test", cx, 58, { align: "center" });
+  doc.text(score.exam_name ? `Computer Based Test — ${score.exam_name}` : "Computer Based Test", cx, 58, { align: "center" });
 
   doc.setDrawColor(212, 160, 23);
   doc.setLineWidth(0.5);
