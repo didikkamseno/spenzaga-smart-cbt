@@ -21,6 +21,7 @@ import AdminStatistics from "./pages/AdminStatistics";
 import AdminReset from "./pages/AdminReset";
 import AdminAnswerAnalysis from "./pages/AdminAnswerAnalysis";
 import AdminExams from "./pages/AdminExams";
+import AdminClasses from "./pages/AdminClasses";
 
 const queryClient = new QueryClient();
 

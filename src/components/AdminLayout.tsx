@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  Users, FileText, Trophy, BarChart3, PieChart, RotateCcw, LogOut, Menu, X, Shield, ClipboardList, CalendarClock,
+  Users, FileText, Trophy, BarChart3, PieChart, RotateCcw, LogOut, Menu, X, Shield, ClipboardList, CalendarClock, School,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminExamProvider } from "@/context/AdminExamContext";
@@ -11,6 +11,7 @@ import AdminExamSelector from "@/components/AdminExamSelector";
 const navItems = [
   { path: "/admin/exams", label: "Paket Ujian", icon: CalendarClock },
   { path: "/admin/participants", label: "Peserta Ujian", icon: Users },
+  { path: "/admin/classes", label: "Progres Per Kelas", icon: School },
   { path: "/admin/questions", label: "Bank Soal", icon: FileText },
   { path: "/admin/results", label: "Hasil Ujian", icon: Trophy },
   { path: "/admin/answer-analysis", label: "Analisis Jawaban", icon: ClipboardList },
