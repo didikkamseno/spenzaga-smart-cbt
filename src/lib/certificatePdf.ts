@@ -88,15 +88,15 @@ export const generateCertificatePdf = (student: Student, score: ScoreRecord, sco
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(148, 163, 184);
-  doc.text("Kepala Sekolah", w - 30, 172, { align: "right" });
+  doc.text("Guru Bahasa Inggris", w - 30, 172, { align: "left" });
 
-  doc.setDrawColor(203, 213, 225);
-  doc.setLineWidth(0.3);
-  doc.line(w - 80, 190, w - 30, 190);
+doc.setFontSize(9);
+  doc.setTextColor(100, 116, 139);
+  doc.text("Didik Kamseno, S. Pd.", w - 30, 190, { align: "left" });
 
   doc.setFontSize(9);
   doc.setTextColor(100, 116, 139);
-  doc.text("NIP. _______________", w - 30, 195, { align: "right" });
+  doc.text("NIP. 198612282022211008", w - 30, 195, { align: "left" });
 
   doc.save(`Sertifikat_CBT_${student.name.replace(/\s+/g, "_")}.pdf`);
 };
