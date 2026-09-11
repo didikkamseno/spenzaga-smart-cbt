@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  Users, FileText, Trophy, BarChart3, PieChart, RotateCcw, LogOut, Menu, X, Shield, ClipboardList, CalendarClock, School,
+  Users, FileText, Trophy, BarChart3, PieChart, RotateCcw, LogOut, Menu, X, Shield, ClipboardList, CalendarClock, School, Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminExamProvider } from "@/context/AdminExamContext";
@@ -18,6 +18,7 @@ const navItems = [
   { path: "/admin/analysis", label: "Analisis Soal", icon: PieChart },
   { path: "/admin/statistics", label: "Statistik", icon: BarChart3 },
   { path: "/admin/reset", label: "Reset & Akses", icon: RotateCcw },
+  { path: "/admin/settings", label: "Pengaturan Akun", icon: Settings },
 ];
 
 const AdminLayout = () => {

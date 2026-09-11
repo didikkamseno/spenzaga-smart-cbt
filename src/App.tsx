@@ -22,6 +22,7 @@ import AdminReset from "./pages/AdminReset";
 import AdminAnswerAnalysis from "./pages/AdminAnswerAnalysis";
 import AdminExams from "./pages/AdminExams";
 import AdminClasses from "./pages/AdminClasses";
+import AdminSettings from "./pages/AdminSettings";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="answer-analysis" element={<AdminAnswerAnalysis />} />
               <Route path="statistics" element={<AdminStatistics />} />
               <Route path="reset" element={<AdminReset />} />
+              <Route path="settings" element={<AdminSettings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
